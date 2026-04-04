@@ -57,28 +57,43 @@ export function useUserStats() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Resolve wallet address — works for both SIWE and custodial sessions
+  const [resolvedWallet, setResolvedWallet] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (walletAddress && isAuthenticated) {
+      setResolvedWallet(walletAddress);
+      return;
+    }
+    // Try custodial session
+    axios.get('/v1/user-auth/me', { withCredentials: true })
+      .then((res) => {
+        const d = res.data as { wallet_address?: string };
+        if (d.wallet_address) setResolvedWallet(d.wallet_address);
+      })
+      .catch(() => {});
+  }, [walletAddress, isAuthenticated]);
+
   const fetch = useCallback(async () => {
-    if (!walletAddress || !isAuthenticated) return;
+    if (!resolvedWallet) return;
     setLoading(true);
     try {
-      const res = await apiGet<UserStats>(`/v1/users/${walletAddress}/profile`);
+      const res = await apiGet<UserStats>(`/v1/users/${resolvedWallet}/profile`);
       setStats(res.data);
     } catch {
       // Fallback to auth state values
-      if (walletAddress) {
-        setStats({
-          walletAddress,
-          tier: tier ?? 'bronze',
-          currentPointsBalance: parseInt(points ?? '0'),
-          totalPointsEarned: parseInt(points ?? '0'),
-          referralCode: '',
-          badgesCount: 0,
-        });
-      }
+      setStats({
+        walletAddress: resolvedWallet,
+        tier: tier ?? 'bronze',
+        currentPointsBalance: parseInt(points ?? '0'),
+        totalPointsEarned: parseInt(points ?? '0'),
+        referralCode: '',
+        badgesCount: 0,
+      });
     } finally {
       setLoading(false);
     }
-  }, [walletAddress, isAuthenticated, tier, points]);
+  }, [resolvedWallet, tier, points]);
 
   useEffect(() => { void fetch(); }, [fetch]);
   return { stats, loading, refetch: fetch };
@@ -90,12 +105,23 @@ export function useBadges() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!walletAddress || !isAuthenticated) return;
-    setLoading(true);
-    apiGet<{ badges: Badge[] }>(`/v1/users/${walletAddress}/badges`)
-      .then((r) => setBadges(r.data.badges))
-      .catch(() => setBadges([]))
-      .finally(() => setLoading(false));
+    const load = async () => {
+      let wallet = walletAddress;
+      if (!wallet || !isAuthenticated) {
+        // Try custodial
+        try {
+          const me = await axios.get('/v1/user-auth/me', { withCredentials: true });
+          wallet = (me.data as { wallet_address?: string }).wallet_address ?? null;
+        } catch { return; }
+      }
+      if (!wallet) return;
+      setLoading(true);
+      apiGet<{ badges: Badge[] }>(`/v1/users/${wallet}/badges`)
+        .then((r) => setBadges(r.data.badges))
+        .catch(() => setBadges([]))
+        .finally(() => setLoading(false));
+    };
+    void load();
   }, [walletAddress, isAuthenticated]);
 
   return { badges, loading };
@@ -107,12 +133,22 @@ export function useRewardHistory() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!walletAddress || !isAuthenticated) return;
-    setLoading(true);
-    apiGet<{ rewards: RewardRecord[] }>(`/v1/users/${walletAddress}/rewards`)
-      .then((r) => setRewards(r.data.rewards))
-      .catch(() => setRewards([]))
-      .finally(() => setLoading(false));
+    const load = async () => {
+      let wallet = walletAddress;
+      if (!wallet || !isAuthenticated) {
+        try {
+          const me = await axios.get('/v1/user-auth/me', { withCredentials: true });
+          wallet = (me.data as { wallet_address?: string }).wallet_address ?? null;
+        } catch { return; }
+      }
+      if (!wallet) return;
+      setLoading(true);
+      apiGet<{ rewards: RewardRecord[] }>(`/v1/users/${wallet}/rewards`)
+        .then((r) => setRewards(r.data.rewards))
+        .catch(() => setRewards([]))
+        .finally(() => setLoading(false));
+    };
+    void load();
   }, [walletAddress, isAuthenticated]);
 
   return { rewards, loading };
@@ -151,12 +187,22 @@ export function useReferralStats() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!walletAddress || !isAuthenticated) return;
-    setLoading(true);
-    apiGet<ReferralStats>(`/v1/referrals/${walletAddress}`)
-      .then((r) => setStats(r.data))
-      .catch(() => setStats(null))
-      .finally(() => setLoading(false));
+    const load = async () => {
+      let wallet = walletAddress;
+      if (!wallet || !isAuthenticated) {
+        try {
+          const me = await axios.get('/v1/user-auth/me', { withCredentials: true });
+          wallet = (me.data as { wallet_address?: string }).wallet_address ?? null;
+        } catch { return; }
+      }
+      if (!wallet) return;
+      setLoading(true);
+      apiGet<ReferralStats>(`/v1/referrals/${wallet}`)
+        .then((r) => setStats(r.data))
+        .catch(() => setStats(null))
+        .finally(() => setLoading(false));
+    };
+    void load();
   }, [walletAddress, isAuthenticated]);
 
   return { stats, loading };

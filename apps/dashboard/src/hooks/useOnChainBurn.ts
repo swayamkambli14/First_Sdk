@@ -78,7 +78,7 @@ export function useOnChainBurn() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const fetch = useCallback(async () => {
-    if (!getApiKey()) return; // not logged in
+    if (!getApiKey() && !localStorage.getItem('cl_company_token')) return; // not logged in
     setLoading(true);
     setError(null);
     try {

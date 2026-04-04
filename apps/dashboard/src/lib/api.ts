@@ -91,7 +91,7 @@ export const analyticsApi = {
 
 export const usersApi = {
   list: (appId: string, page = 1, limit = 20) =>
-    api.get(`/v1/leaderboard?app_id=${appId}&period=all_time&limit=${limit}&offset=${(page - 1) * limit}`),
+    api.get(`/leaderboard?app_id=${appId}&period=all_time&limit=${limit}&offset=${(page - 1) * limit}`),
 };
 
 // ─── App registration ─────────────────────────────────────────────────────────

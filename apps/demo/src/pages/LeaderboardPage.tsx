@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useChainLoyaltyAuth } from '../hooks/useChainLoyaltyAuth';
+import AurumNav from '../components/aurum/AurumNav';
+import { AURUM_TIER_NAMES } from '../config/aurum';
 
-const APP_ID = import.meta.env['VITE_APP_ID'] ?? 'demo-app-id';
+const APP_ID = import.meta.env['VITE_APP_ID'] ?? '';
 type Period = 'all_time' | 'monthly' | 'weekly';
 
 interface LeaderboardEntry {
@@ -13,11 +14,10 @@ interface LeaderboardEntry {
   points: string;
 }
 
-const TIER_COLORS: Record<string, string> = {
-  bronze: 'text-orange-400',
-  silver: 'text-gray-300',
-  gold: 'text-yellow-400',
-  platinum: 'text-cyan-400',
+const PERIOD_LABELS: Record<Period, string> = {
+  all_time: 'All Time',
+  monthly: 'This Month',
+  weekly: 'This Week',
 };
 
 export default function LeaderboardPage() {
@@ -29,8 +29,8 @@ export default function LeaderboardPage() {
   const fetchLeaderboard = async (p: Period) => {
     setLoading(true);
     try {
-      const res = await axios.get(`/v1/leaderboard?app_id=${APP_ID}&period=${p}&limit=10`);
-      setEntries((res.data as { leaderboard: LeaderboardEntry[] }).leaderboard);
+      const res = await axios.get(`/v1/leaderboard?app_id=${APP_ID}&period=${p}&limit=20`);
+      setEntries((res.data as { leaderboard: LeaderboardEntry[] }).leaderboard ?? []);
     } catch {
       setEntries([]);
     } finally {
@@ -40,86 +40,99 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     void fetchLeaderboard(period);
-    // Auto-refresh every 60 seconds — matches server cache TTL
     const interval = setInterval(() => void fetchLeaderboard(period), 60_000);
     return () => clearInterval(interval);
   }, [period]);
 
-  const abbrev = (addr: string) => addr;
+  const abbrevWallet = (addr: string) =>
+    addr.startsWith('0x') ? `Guest ${addr.slice(2, 5).toUpperCase()}` : addr.split('@')[0] ?? addr;
+
+  const isMe = (addr: string) =>
+    walletAddress && addr.toLowerCase() === walletAddress.toLowerCase();
+
+  const RANK_STYLES = ['text-aurum-gold', 'text-gray-400', 'text-amber-700'];
 
   return (
-    <div className="min-h-screen p-6 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
-        <Link to="/dashboard" className="text-purple-400 hover:text-purple-300 text-sm">← Dashboard</Link>
-      </div>
+    <div className="min-h-screen bg-aurum-ivory">
+      <AurumNav />
 
-      {/* Period tabs */}
-      <div className="flex gap-2 mb-6">
-        {(['all_time', 'monthly', 'weekly'] as Period[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              period === p
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:text-white'
-            }`}
-          >
-            {p === 'all_time' ? 'All Time' : p.charAt(0).toUpperCase() + p.slice(1)}
-          </button>
-        ))}
-      </div>
+      <div className="max-w-3xl mx-auto px-6 pt-28 pb-16">
+        <div className="mb-8">
+          <p className="text-aurum-gold text-xs tracking-[0.3em] uppercase mb-2">Aurum Circle</p>
+          <h1 className="font-display text-4xl text-aurum-midnight font-light">
+            Top <em className="text-aurum-gold">Guests</em>
+          </h1>
+        </div>
 
-      {/* Leaderboard table */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500 animate-pulse">Loading...</div>
-        ) : entries.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No data yet</div>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-800 text-gray-400 text-sm">
-                <th className="text-left p-4">Rank</th>
-                <th className="text-left p-4">Wallet</th>
-                <th className="text-left p-4">Tier</th>
-                <th className="text-right p-4">Points</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => {
-                const isCurrentUser =
-                  walletAddress &&
-                  entry.wallet_address.toLowerCase().includes(walletAddress.slice(2, 6).toLowerCase());
-                return (
+        {/* Period tabs */}
+        <div className="flex bg-white rounded-xl p-1 shadow-card mb-6 gap-1 w-fit">
+          {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+                period === p
+                  ? 'bg-aurum-midnight text-aurum-ivory shadow-sm'
+                  : 'text-aurum-text-secondary hover:text-aurum-midnight'
+              }`}
+            >
+              {PERIOD_LABELS[p]}
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-card overflow-hidden">
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="w-6 h-6 border-2 border-aurum-gold border-t-transparent rounded-full animate-spin mx-auto" />
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="p-12 text-center text-aurum-text-secondary">
+              No guests on the leaderboard yet — be the first!
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-aurum-text-secondary uppercase tracking-wider">Rank</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-aurum-text-secondary uppercase tracking-wider">Guest</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-aurum-text-secondary uppercase tracking-wider">Tier</th>
+                  <th className="text-right px-5 py-3 text-xs font-medium text-aurum-text-secondary uppercase tracking-wider">Gold</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((entry) => (
                   <tr
                     key={entry.rank}
-                    className={`border-b border-gray-800 last:border-0 ${
-                      isCurrentUser ? 'bg-purple-900/20' : 'hover:bg-gray-800/50'
+                    className={`border-b border-gray-50 last:border-0 transition-colors ${
+                      isMe(entry.wallet_address) ? 'bg-aurum-gold/5' : 'hover:bg-gray-50'
                     }`}
                   >
-                    <td className="p-4 text-gray-400 font-mono">#{entry.rank}</td>
-                    <td className="p-4 font-mono text-sm text-gray-200">
-                      {entry.wallet_address}
-                      {isCurrentUser && (
-                        <span className="ml-2 text-xs bg-purple-800 text-purple-300 px-2 py-0.5 rounded-full">
-                          You
-                        </span>
+                    <td className="px-5 py-3.5">
+                      <span className={`font-display text-xl font-light ${RANK_STYLES[entry.rank - 1] ?? 'text-aurum-text-secondary'}`}>
+                        #{entry.rank}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="text-aurum-midnight text-sm font-medium">
+                        {abbrevWallet(entry.wallet_address)}
+                      </span>
+                      {isMe(entry.wallet_address) && (
+                        <span className="ml-2 text-[10px] bg-aurum-gold/20 text-aurum-gold px-2 py-0.5 rounded-full font-semibold">You</span>
                       )}
                     </td>
-                    <td className={`p-4 capitalize font-medium ${TIER_COLORS[entry.tier] ?? 'text-gray-400'}`}>
-                      {entry.tier}
+                    <td className="px-5 py-3.5 text-aurum-text-secondary text-sm">
+                      {AURUM_TIER_NAMES[entry.tier] ?? entry.tier}
                     </td>
-                    <td className="p-4 text-right font-bold text-yellow-400">
-                      {parseInt(entry.points).toLocaleString()}
+                    <td className="px-5 py-3.5 text-right font-semibold text-aurum-gold">
+                      {parseInt(entry.points).toLocaleString()} Gold
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

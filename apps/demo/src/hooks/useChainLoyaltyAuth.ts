@@ -68,7 +68,20 @@ export function useChainLoyaltyAuth() {
         error: null,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Authentication failed';
+      // Plain-English error messages — no blockchain jargon
+      let message = 'Something went wrong. Please try again.';
+      if (err instanceof Error) {
+        const raw = err.message.toLowerCase();
+        if (raw.includes('user rejected') || raw.includes('user denied') || raw.includes('cancelled')) {
+          message = 'No problem — you cancelled the sign-in.';
+        } else if (raw.includes('nonce expired') || raw.includes('nonce')) {
+          message = 'Your session expired. Please try again.';
+        } else if (raw.includes('signature') || raw.includes('mismatch')) {
+          message = 'Verification failed. Please try again.';
+        } else if (raw.includes('network') || raw.includes('fetch')) {
+          message = 'Connection issue. Check your internet and try again.';
+        }
+      }
       setAuthState((prev) => ({ ...prev, isLoading: false, error: message }));
     }
   }, [address, signMessageAsync]);

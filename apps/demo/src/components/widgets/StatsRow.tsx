@@ -75,7 +75,10 @@ export default function StatsRow() {
 
         {/* Badges */}
         <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-cyan-500/30 transition-all duration-200">
-          <p className="font-mono text-xs text-gray-500 uppercase tracking-widest mb-2">Badges Earned</p>
+          <p className="font-mono text-xs text-gray-500 uppercase tracking-widest mb-2 flex items-center">
+            Badges Earned
+            <InfoTooltip text="Special achievements you've unlocked. Each one is unique to you." />
+          </p>
           <p className="font-['Space_Mono'] text-3xl font-bold text-white mb-1">{countBadges}</p>
           <p className="text-gray-500 text-xs font-['DM_Sans']">Achievements unlocked</p>
         </div>
@@ -100,7 +103,10 @@ export default function StatsRow() {
 
         {/* Referral code */}
         <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-cyan-500/30 transition-all duration-200">
-          <p className="font-mono text-xs text-gray-500 uppercase tracking-widest mb-2">Referral Code</p>
+          <p className="font-mono text-xs text-gray-500 uppercase tracking-widest mb-2 flex items-center">
+            Referral Code
+            <InfoTooltip text="Share this link with friends. When they join and make their first purchase, you both earn bonus points." />
+          </p>
           <p className="font-['Space_Mono'] text-lg font-bold text-cyan-400 mb-1 break-all">
             {stats?.referralCode ?? '—'}
           </p>

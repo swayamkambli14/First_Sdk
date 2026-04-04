@@ -1,0 +1,24 @@
+:root {
+  --aurum-gold: #C9A84C;
+  --aurum-gold-light: #E8C97A;
+  --aurum-gold-dark: #A07830;
+  --aurum-midnight: #1C1F2E;
+  --aurum-midnight-light: #2D3148;
+  --aurum-ivory: #FAF8F4;
+  --aurum-ivory-dark: #F0EBE3;
+  --aurum-terracotta: #C4622D;
+  --aurum-text-primary: #1C1F2E;
+  --aurum-text-secondary: #6B6F7E;
+  --aurum-text-light: #FAF8F4;
+
+  --aurum-font-display: 'Cormorant Garamond', Georgia, serif;
+  --aurum-font-body: 'DM Sans', system-ui, sans-serif;
+
+  --aurum-shadow-gold: 0 4px 24px rgba(201, 168, 76, 0.25);
+  --aurum-shadow-card: 0 2px 16px rgba(28, 31, 46, 0.08);
+
+  --aurum-radius-sm: 4px;
+  --aurum-radius-md: 8px;
+  --aurum-radius-lg: 16px;
+  --aurum-radius-xl: 24px;
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { analyticsApi } from '../lib/api';
+import { analyticsApi, companyApi } from '../lib/api';
 
 export interface Analytics {
   total_users: number;
@@ -18,10 +18,29 @@ export function useAnalytics() {
     setLoading(true);
     setError(null);
     try {
+      // Try business analytics first (API key auth)
       const res = await analyticsApi.get();
       setData(res.data as Analytics);
     } catch {
-      setError('Failed to load analytics');
+      // Fall back to company analytics (company session auth)
+      try {
+        const companyToken = localStorage.getItem('cl_company_token');
+        if (companyToken) {
+          const res = await companyApi.getAnalytics(companyToken);
+          const d = res.data as { total_users: number; total_events: number; total_rewards: number; apps_count: number };
+          setData({
+            total_users: d.total_users,
+            total_rewards_issued: d.total_rewards,
+            events_last_7_days: 0,
+            top_rules: [],
+            tier_distribution: [],
+          });
+        } else {
+          setError('Failed to load analytics');
+        }
+      } catch {
+        setError('Failed to load analytics');
+      }
     } finally {
       setLoading(false);
     }

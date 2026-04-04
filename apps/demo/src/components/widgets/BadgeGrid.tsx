@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Award, ShoppingCart, Users, Zap, Clover, Medal, Trophy, ExternalLink, CheckCircle } from 'lucide-react';
 import { useBadges } from '../../hooks/useRewardsData';
 import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
+import { InfoTooltip } from '../ui/Tooltip';
 import { ethers } from 'ethers';
 
 const RPC_URL = import.meta.env['VITE_BLOCKCHAIN_RPC_URL'] ?? 'https://eth-sepolia.g.alchemy.com/v2/YZtc-AuzXiZkr2BOVIvER';
@@ -50,7 +51,10 @@ export default function BadgeGrid() {
   if (loading && badges.length === 0) {
     return (
       <div>
-        <h3 className="font-['Space_Mono'] text-white font-bold text-sm mb-4">Earned Badges</h3>
+        <h3 className="font-['Space_Mono'] text-white font-bold text-sm mb-4 flex items-center">
+          Earned Badges
+          <InfoTooltip text="Special achievements you've unlocked. Hover any badge to see when you earned it." />
+        </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-4 animate-pulse h-28" />

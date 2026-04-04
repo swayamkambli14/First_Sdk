@@ -2,18 +2,18 @@ import { useState, useCallback } from 'react';
 import { useAccount, useBalance, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import {
-  LayoutDashboard, Trophy, Zap, BarChart2, Users, Settings, LogOut, X, Coins,
+  LayoutDashboard, Trophy, Zap, BarChart2, Users, Settings, LogOut, X,
 } from 'lucide-react';
 import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
-import { useCustodialSession } from '../../hooks/useCustodialSession';
-import { useUserStats } from '../../hooks/useRewardsData';
 import { useRewardSocket, RewardEvent } from '../../hooks/useRewardSocket';
 import { useNavigate } from 'react-router-dom';
+import OverviewTab from '../tabs/OverviewTab';
 import RewardsTab from '../tabs/RewardsTab';
 import SpendTab from '../tabs/SpendTab';
 import LeaderboardTab from '../tabs/LeaderboardTab';
 import ReferralsTab from '../tabs/ReferralsTab';
 import SettingsTab from '../tabs/SettingsTab';
+import MobileNav from './MobileNav';
 
 
 type Tab = 'overview' | 'rewards' | 'spend' | 'leaderboard' | 'referrals' | 'settings';
@@ -89,13 +89,8 @@ export default function DashboardShell() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Demo badge */}
-          <span className="hidden sm:inline font-mono text-[10px] text-amber-400 border border-amber-400/30 bg-amber-400/5 px-2 py-0.5 rounded tracking-widest uppercase">
-            Demo Data
-          </span>
-
-          {/* Network badge — only shown in web3 mode */}
-          <span className="font-mono text-[10px] text-gray-400 border border-white/10 px-2 py-0.5 rounded hidden">
+          {/* Network badge */}
+          <span className="hidden sm:inline font-mono text-[10px] text-gray-400 border border-white/10 px-2 py-0.5 rounded">
             Sepolia
           </span>
 

@@ -30,6 +30,14 @@ export class AuthenticationError extends AppError {
   }
 }
 
+// Alias used in company routes
+export class UnauthorizedError extends AppError {
+  readonly statusCode = 401;
+  constructor(message: string, errorCode = 'UNAUTHORIZED') {
+    super(message, errorCode);
+  }
+}
+
 export class ForbiddenError extends AppError {
   readonly statusCode = 403;
   constructor(message: string, errorCode = 'FORBIDDEN') {

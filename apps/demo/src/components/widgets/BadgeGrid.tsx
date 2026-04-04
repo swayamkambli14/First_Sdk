@@ -1,6 +1,12 @@
 import { useState } from 'react';
-import { Award, ShoppingCart, Users, Zap, Clover, Medal, Star, Trophy } from 'lucide-react';
+import { Award, ShoppingCart, Users, Zap, Clover, Medal, Trophy, ExternalLink, CheckCircle } from 'lucide-react';
 import { useBadges } from '../../hooks/useRewardsData';
+import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
+import { ethers } from 'ethers';
+
+const RPC_URL = import.meta.env['VITE_BLOCKCHAIN_RPC_URL'] ?? 'https://eth-sepolia.g.alchemy.com/v2/YZtc-AuzXiZkr2BOVIvER';
+const BADGE_NFT_ADDR = import.meta.env['VITE_BADGE_NFT_ADDRESS'] ?? '0x78c7B78F3ef9f1d5216B74CDd3f56D74862DA9ab';
+const BADGE_NFT_ABI = ['function isValidBadge(address, uint256) view returns (bool)'];
 
 const RARITY_COLORS: Record<string, string> = {
   common:    'border-white/10',
@@ -23,7 +29,23 @@ const BADGE_ICONS: Record<string, React.ReactNode> = {
 
 export default function BadgeGrid() {
   const { badges, loading } = useBadges();
+  const { walletAddress } = useChainLoyaltyAuth();
   const [tooltip, setTooltip] = useState<string | null>(null);
+  const [onChainValid, setOnChainValid] = useState<Record<string, boolean>>({});
+
+  // Check on-chain validity for badges that have a tx hash (minted on-chain)
+  useState(() => {
+    if (!walletAddress || badges.length === 0) return;
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const contract = new ethers.Contract(BADGE_NFT_ADDR, BADGE_NFT_ABI, provider);
+    badges.forEach((badge, i) => {
+      if (!badge.on_chain_tx_hash) return;
+      // Use badge index as tokenId approximation
+      contract.isValidBadge(walletAddress, i).then((valid: boolean) => {
+        setOnChainValid((prev) => ({ ...prev, [badge.badge_id]: valid }));
+      }).catch(() => {});
+    });
+  });
 
   if (loading && badges.length === 0) {
     return (
@@ -74,14 +96,22 @@ export default function BadgeGrid() {
             </p>
             <p className="text-gray-500 text-[10px] font-mono mb-2 capitalize">{badge.rarity}</p>
             {badge.on_chain_tx_hash && (
-              <a
-                href={`https://sepolia.etherscan.io/tx/${badge.on_chain_tx_hash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-cyan-400 text-[10px] font-mono hover:text-cyan-300 transition-colors"
-              >
-                View on Chain →
-              </a>
+              <div className="space-y-1">
+                {onChainValid[badge.badge_id] !== undefined && (
+                  <div className="flex items-center gap-1">
+                    <CheckCircle size={10} className="text-green-400" />
+                    <span className="text-[10px] font-mono text-green-400">On-chain verified</span>
+                  </div>
+                )}
+                <a
+                  href={`https://sepolia.etherscan.io/tx/${badge.on_chain_tx_hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-cyan-400 text-[10px] font-mono hover:text-cyan-300 transition-colors"
+                >
+                  View on Chain <ExternalLink size={9} />
+                </a>
+              </div>
             )}
           </div>
         ))}

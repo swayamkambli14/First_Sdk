@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Zap, Trophy, Dices, Users, BarChart2, Plug,
-  ChevronLeft, ChevronRight, LogOut,
+  ChevronLeft, ChevronRight, LogOut, Flame, Building2,
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 
@@ -13,11 +13,13 @@ const NAV = [
   { to: '/spin-pools', icon: Dices,           label: 'Spin Pools' },
   { to: '/users',      icon: Users,           label: 'Users' },
   { to: '/analytics',  icon: BarChart2,       label: 'Analytics' },
+  { to: '/burn',       icon: Flame,           label: 'Burn Dashboard' },
   { to: '/sdk',        icon: Plug,            label: 'SDK & Docs' },
+  { to: '/company',    icon: Building2,       label: 'Company' },
 ];
 
 export default function Shell({ children }: { children: React.ReactNode }) {
-  const { logout, appId } = useAuth();
+  const { logout, appId, company } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -61,8 +63,18 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <div className="p-3 border-t border-white/10">
           {!collapsed && (
             <div className="px-2 mb-2">
-              <div className="text-xs text-slate-500 truncate">App ID</div>
-              <div className="text-xs text-slate-300 font-mono truncate">{appId || '—'}</div>
+              {company ? (
+                <>
+                  <div className="text-xs text-slate-500 truncate">Company</div>
+                  <div className="text-xs text-slate-300 font-medium truncate">{company.name}</div>
+                  <div className="text-xs text-slate-500 truncate">{company.email}</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-xs text-slate-500 truncate">App ID</div>
+                  <div className="text-xs text-slate-300 font-mono truncate">{appId || '—'}</div>
+                </>
+              )}
             </div>
           )}
           <button

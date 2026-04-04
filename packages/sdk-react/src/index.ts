@@ -11,6 +11,8 @@ export { useChainLoyaltyAuth } from './hooks/useChainLoyaltyAuth.js';
 // Components
 export { RewardsDashboard } from './components/RewardsDashboard.js';
 export type { RewardsDashboardProps } from './components/RewardsDashboard.js';
+export { LoyaltyTopBar } from './components/LoyaltyTopBar.js';
+export type { LoyaltyTopBarProps } from './components/LoyaltyTopBar.js';
 export { Leaderboard } from './components/Leaderboard.js';
 export type { LeaderboardProps } from './components/Leaderboard.js';
 export { SpinWheelModal } from './components/SpinWheelModal.js';

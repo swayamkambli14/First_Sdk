@@ -1,93 +1,204 @@
+import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { Lock } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
+import { useAccount } from 'wagmi';
+import axios from 'axios';
+
+const APP_ID = import.meta.env['VITE_APP_ID'] ?? 'demo-app-id';
 
 export default function WalletGate() {
-  const { isConnected, isLoading, login } = useChainLoyaltyAuth();
+  const { login } = useChainLoyaltyAuth();
+  const { isConnected, address } = useAccount();
+  const [mode, setMode] = useState<'email' | 'web3'>('email');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [siweLoading, setSiweLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    try {
+      if (authMode === 'signup') {
+        await axios.post('/v1/user-auth/signup', {
+          email, password, display_name: name || undefined, app_id: APP_ID,
+        }, { withCredentials: true });
+        setSuccess('Account created! You\'re now signed in.');
+        // Reload to trigger auth check
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        await axios.post('/v1/user-auth/login', {
+          email, password, app_id: APP_ID,
+        }, { withCredentials: true });
+        window.location.reload();
+      }
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(msg ?? (authMode === 'signup' ? 'Sign up failed. Please try again.' : 'Incorrect email or password.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputCls = 'w-full bg-black/30 border border-white/10 focus:border-cyan-500/50 rounded-xl px-4 py-3 text-white font-[\'DM_Sans\'] text-sm outline-none transition-colors placeholder-gray-700 min-h-[44px]';
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4">
-      <div className="relative">
-        {/* Pulsing glow border */}
-        <div className="absolute inset-0 rounded-2xl bg-cyan-500/20 blur-xl animate-pulse" />
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <span className="font-['Space_Mono'] text-cyan-400 font-bold text-2xl">
+            Chain<span className="text-white">Loyalty</span>
+          </span>
+          <p className="text-gray-500 text-sm mt-1">Your rewards, your way</p>
+        </div>
 
-        <div
-          className="relative backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-10 w-full max-w-sm text-center"
-          style={{ boxShadow: '0 0 0 1px rgba(0,229,255,0.15), 0 0 40px rgba(0,229,255,0.08)' }}
-        >
-          {/* MetaMask fox icon */}
-          <div className="flex justify-center mb-6">
-            <svg width="80" height="80" viewBox="0 0 318.6 318.6" xmlns="http://www.w3.org/2000/svg">
-              <polygon fill="#E2761B" stroke="#E2761B" strokeLinecap="round" strokeLinejoin="round" points="274.1,35.5 174.6,109.4 193,65.8" />
-              <polygon fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round" points="44.4,35.5 143.1,110.1 125.6,65.8" />
-              <polygon fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" points="238.3,206.8 211.8,247.4 268.5,263 284.8,207.7" />
-              <polygon fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" points="33.9,207.7 50.1,263 106.8,247.4 80.3,206.8" />
-              <polygon fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" points="103.6,138.2 87.8,162.1 144.1,164.6 142.1,104.1" />
-              <polygon fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round" points="214.9,138.2 175.9,103.4 174.6,164.6 230.8,162.1" />
-              <polygon fill="#233447" stroke="#233447" strokeLinecap="round" strokeLinejoin="round" points="106.8,247.4 140.6,230.9 111.4,208.1" />
-              <polygon fill="#233447" stroke="#233447" strokeLinecap="round" strokeLinejoin="round" points="177.9,230.9 211.8,247.4 207.1,208.1" />
-              <polygon fill="#CD6116" stroke="#CD6116" strokeLinecap="round" strokeLinejoin="round" points="211.8,247.4 177.9,230.9 180.6,253 180.3,262.3" />
-              <polygon fill="#CD6116" stroke="#CD6116" strokeLinecap="round" strokeLinejoin="round" points="106.8,247.4 138.3,262.3 138.1,253 140.6,230.9" />
-              <polygon fill="#E4751F" stroke="#E4751F" strokeLinecap="round" strokeLinejoin="round" points="138.8,193.5 110.6,185.2 130.5,176.1" />
-              <polygon fill="#E4751F" stroke="#E4751F" strokeLinecap="round" strokeLinejoin="round" points="179.7,193.5 188,176.1 208,185.2" />
-              <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="106.8,247.4 111.6,206.8 80.3,207.7" />
-              <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="207,206.8 211.8,247.4 238.3,207.7" />
-              <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="230.8,162.1 174.6,164.6 179.8,193.5 188.1,176.1 208.1,185.2" />
-              <polygon fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round" points="110.6,185.2 130.6,176.1 138.8,193.5 144.1,164.6 87.8,162.1" />
-              <polygon fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" points="87.8,162.1 111.4,208.1 110.6,185.2" />
-              <polygon fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" points="208.1,185.2 207.1,208.1 230.8,162.1" />
-              <polygon fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" points="144.1,164.6 138.8,193.5 145.4,227.6 146.9,182.7" />
-              <polygon fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round" points="174.6,164.6 171.9,182.6 172.9,227.6 179.8,193.5" />
-              <polygon fill="#161616" stroke="#161616" strokeLinecap="round" strokeLinejoin="round" points="179.8,193.5 172.9,227.6 177.9,230.9 207.1,208.1 208.1,185.2" />
-              <polygon fill="#161616" stroke="#161616" strokeLinecap="round" strokeLinejoin="round" points="110.6,185.2 111.4,208.1 140.6,230.9 145.4,227.6 138.8,193.5" />
-            </svg>
-          </div>
+        {/* Mode toggle */}
+        <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 mb-6 gap-1">
+          <button
+            onClick={() => { setMode('email'); setError(''); }}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'email' ? 'bg-cyan-500 text-black' : 'text-gray-400 hover:text-white'}`}
+          >
+            <Mail size={14} className="inline mr-1.5" />
+            Sign In
+          </button>
+          <button
+            onClick={() => { setMode('web3'); setError(''); }}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'web3' ? 'bg-cyan-500 text-black' : 'text-gray-400 hover:text-white'}`}
+          >
+            Advanced
+          </button>
+        </div>
 
-          <h2 className="font-['Space_Mono'] text-2xl font-bold text-white mb-3">
-            Connect Your Wallet
-          </h2>
-          <p className="font-['DM_Sans'] text-gray-400 text-sm mb-8 leading-relaxed">
-            Sign in with MetaMask or WalletConnect to access your rewards dashboard.
-          </p>
+        <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-6">
 
-          <div className="space-y-3">
-            <ConnectButton.Custom>
-              {({ openConnectModal }) => (
+          {/* Email/Password path */}
+          {mode === 'email' && (
+            <>
+              <div className="flex bg-black/20 rounded-xl p-1 mb-5 gap-1">
+                {(['login', 'signup'] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => { setAuthMode(m); setError(''); setSuccess(''); }}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${authMode === m ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                  >
+                    {m === 'login' ? 'Sign In' : 'Create Account'}
+                  </button>
+                ))}
+              </div>
+
+              {success && (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3 mb-4">
+                  <p className="text-green-400 text-xs font-mono">{success}</p>
+                </div>
+              )}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 mb-4">
+                  <p className="text-red-400 text-xs font-mono">{error}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleEmailAuth} className="space-y-3">
+                {authMode === 'signup' && (
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name (optional)"
+                    className={inputCls}
+                  />
+                )}
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email address"
+                  required
+                  className={inputCls}
+                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    required
+                    minLength={8}
+                    className={`${inputCls} pr-12`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 <button
-                  onClick={() => { openConnectModal(); }}
-                  className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-['Space_Mono'] font-bold text-sm rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,229,255,0.3)] active:scale-[0.97] min-h-[44px]"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-['Space_Mono'] font-bold text-sm rounded-xl transition-all active:scale-[0.97] min-h-[44px]"
                 >
-                  Connect MetaMask
+                  {loading ? '...' : authMode === 'login' ? 'Sign In' : 'Create Account'}
+                </button>
+              </form>
+
+              <p className="text-center text-gray-600 text-xs mt-4 flex items-center justify-center gap-1">
+                <Lock size={10} /> Your rewards are safe and secure
+              </p>
+            </>
+          )}
+
+          {/* Web3 / MetaMask path */}
+          {mode === 'web3' && (
+            <div className="space-y-4">
+              <p className="text-gray-400 text-sm text-center leading-relaxed">
+                Already have a MetaMask or WalletConnect account? Connect it here.
+              </p>
+              {!isConnected ? (
+                <ConnectButton.Custom>
+                  {({ openConnectModal }) => (
+                    <button
+                      onClick={openConnectModal}
+                      className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-['Space_Mono'] font-bold text-sm rounded-xl transition-all active:scale-[0.97] min-h-[44px]"
+                    >
+                      Connect Account
+                    </button>
+                  )}
+                </ConnectButton.Custom>
+              ) : (
+                <button
+                  onClick={async () => {
+                    setSiweLoading(true);
+                    setError('');
+                    try {
+                      await login();
+                      window.location.reload();
+                    } catch {
+                      setError('Verification failed. Please try again.');
+                    } finally {
+                      setSiweLoading(false);
+                    }
+                  }}
+                  disabled={siweLoading}
+                  className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-['Space_Mono'] font-bold text-sm rounded-xl transition-all active:scale-[0.97] min-h-[44px]"
+                >
+                  {siweLoading ? 'Verifying...' : `Sign In as ${address?.slice(0, 6)}...${address?.slice(-4)}`}
                 </button>
               )}
-            </ConnectButton.Custom>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="text-gray-600 text-xs font-mono">or</span>
-              <div className="flex-1 h-px bg-white/10" />
+              {error && <p className="text-red-400 text-xs font-mono text-center">{error}</p>}
+              <p className="text-gray-600 text-xs text-center">
+                For advanced users with an existing account
+              </p>
             </div>
-
-            <ConnectButton.Custom>
-              {({ openConnectModal }) => (
-                <button
-                  onClick={openConnectModal}
-                  className="w-full py-3 border border-white/20 hover:border-cyan-500/40 text-white font-['Space_Mono'] text-sm rounded-lg transition-all duration-200 hover:bg-white/5 active:scale-[0.97] min-h-[44px]"
-                >
-                  WalletConnect
-                </button>
-              )}
-            </ConnectButton.Custom>
-          </div>
-
-          <p className="text-gray-600 text-xs font-mono mt-6 flex items-center justify-center gap-1">
-            <Lock size={12} /> We never access your private keys
-          </p>
-
-          {isConnected && isLoading && (
-            <p className="text-cyan-400 text-xs font-mono mt-3 animate-pulse">
-              ◈ Signing authentication message...
-            </p>
           )}
         </div>
       </div>

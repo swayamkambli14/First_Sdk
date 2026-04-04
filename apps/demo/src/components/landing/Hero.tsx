@@ -80,29 +80,29 @@ export default function Hero() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/5">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
             <span className="text-cyan-400 text-xs font-mono tracking-widest uppercase">
-              Web3 Loyalty Infrastructure
+              Next-Gen Loyalty Platform
             </span>
           </div>
 
           <h1 className="font-['Space_Mono'] text-5xl lg:text-6xl font-bold text-white leading-tight">
             Your Loyalty.<br />
-            Your Wallet.<br />
+            Your Rewards.<br />
             <span className="text-cyan-400">Your Rules.</span>
           </h1>
 
           <p className="font-['DM_Sans'] text-gray-400 text-lg leading-relaxed max-w-lg">
-            ChainLoyalty turns every user action into a verifiable on-chain reward.
-            Sign up with email, then connect your wallet on the dashboard.
+            ChainLoyalty turns every action into a real reward.
+            Sign up with your email and start earning instantly.
           </p>
 
           <div className="flex flex-wrap gap-4">
             <ConnectButton.Custom>
               {({ openConnectModal }) => (
                 <button
-                  onClick={openConnectModal}
+                  onClick={() => navigate('/dashboard')}
                   className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-['Space_Mono'] font-bold text-sm rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] active:scale-[0.97]"
                 >
-                  Connect Wallet
+                  Get Started
                 </button>
               )}
             </ConnectButton.Custom>
@@ -125,12 +125,12 @@ export default function Hero() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <p className="text-gray-500 text-xs font-mono">WALLET</p>
-                  <p className="text-white text-sm font-mono">0x1A2b...9A0b</p>
+                  <p className="text-gray-500 text-xs font-mono">ACCOUNT</p>
+                  <p className="text-white text-sm font-mono">demo@example.com</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-400" />
-                  <span className="text-green-400 text-xs font-mono">Sepolia</span>
+                  <span className="text-green-400 text-xs font-mono">Active</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-5">

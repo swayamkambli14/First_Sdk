@@ -31,8 +31,21 @@ export function isLoggedIn(): boolean {
 const api = axios.create({ baseURL: BASE });
 
 api.interceptors.request.use((config) => {
-  const key = getApiKey();
-  if (key) config.headers['Authorization'] = `Bearer ${key}`;
+  const apiKey = getApiKey();
+  const companyToken = localStorage.getItem('cl_company_token');
+  const companyData = (() => {
+    try { return JSON.parse(localStorage.getItem('cl_company') ?? 'null'); } catch { return null; }
+  })();
+
+  if (apiKey) {
+    // API key mode — send raw key
+    config.headers['Authorization'] = `Bearer ${apiKey}`;
+  } else if (companyToken) {
+    // Company session mode — send session token + active app id
+    config.headers['Authorization'] = `Bearer ${companyToken}`;
+    const activeAppId = localStorage.getItem('cl_active_app_id');
+    if (activeAppId) config.headers['x-app-id'] = activeAppId;
+  }
   return config;
 });
 
@@ -86,4 +99,44 @@ export const usersApi = {
 export const appsApi = {
   register: (name: string) => axios.post(`${BASE}/apps/register`, { name }),
   get: (appId: string) => api.get(`/apps/${appId}`),
+};
+
+// ─── Company auth ─────────────────────────────────────────────────────────────
+
+export const companyApi = {
+  register: (data: {
+    name: string; email: string; password: string;
+    contact_name?: string; industry?: string; website?: string; country?: string;
+  }) => axios.post(`${BASE}/company/register`, data),
+
+  login: (email: string, password: string) =>
+    axios.post(`${BASE}/company/login`, { email, password }),
+
+  logout: (token: string) =>
+    axios.post(`${BASE}/company/logout`, {}, { headers: { Authorization: `Bearer ${token}` } }),
+
+  me: (token: string) =>
+    axios.get(`${BASE}/company/me`, { headers: { Authorization: `Bearer ${token}` } }),
+
+  updateProfile: (token: string, data: unknown) =>
+    axios.put(`${BASE}/company/me`, data, { headers: { Authorization: `Bearer ${token}` } }),
+
+  getApps: (token: string) =>
+    axios.get(`${BASE}/company/apps`, { headers: { Authorization: `Bearer ${token}` } }),
+
+  createApp: (token: string, name: string, webhookUrl?: string) =>
+    axios.post(`${BASE}/company/apps`, { name, webhook_url: webhookUrl }, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getAnalytics: (token: string) =>
+    axios.get(`${BASE}/company/analytics`, { headers: { Authorization: `Bearer ${token}` } }),
+
+  getApiKey: (token: string) =>
+    axios.get(`${BASE}/company/api-key`, { headers: { Authorization: `Bearer ${token}` } }),
+
+  generateApiKey: (token: string) =>
+    axios.post(`${BASE}/company/api-key`, {}, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    }),
 };

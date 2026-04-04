@@ -42,4 +42,7 @@ export const env = cleanEnv(process.env, {
   // Rules Engine
   RULES_CONFIG_PATH: str({ default: './src/config/rules.config.json' }),
   FORMULA_MAX_POINTS: num({ default: 100000 }),
+
+  // Custodial Wallet Encryption
+  WALLET_ENCRYPTION_SECRET: str({ default: 'chainloyalty-dev-wallet-secret-change-in-prod' }),
 });

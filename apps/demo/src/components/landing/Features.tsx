@@ -1,12 +1,12 @@
 import { Key, Zap, Award, Dices, Users, Link } from 'lucide-react';
 
 const features = [
-  { icon: Key,   title: 'Wallet-Native Identity',   desc: 'Your rewards tied to your wallet. No email needed.' },
-  { icon: Zap,   title: 'Instant Reward Engine',    desc: 'Every action evaluated in real-time against reward rules.' },
-  { icon: Award, title: 'On-Chain Badges',          desc: 'Achievements minted as NFTs. Provably yours forever.' },
-  { icon: Dices, title: 'Spin & Win',               desc: 'Hit milestones, spin the wheel. Transparent odds, real rewards.' },
-  { icon: Users, title: 'Refer & Earn',             desc: 'Share your link. Both wallets get credited automatically.' },
-  { icon: Link,  title: 'Cross-Platform Portable',  desc: 'One wallet identity across every app using ChainLoyalty.' },
+  { icon: Key,   title: 'Your Identity, Your Rewards',  desc: 'Sign up with email. Your rewards are tied to your account — no passwords to remember.' },
+  { icon: Zap,   title: 'Instant Reward Engine',        desc: 'Every action evaluated in real-time. Earn rewards the moment you take action.' },
+  { icon: Award, title: 'Collectible Achievements',     desc: 'Unlock special badges as you hit milestones. Each one is uniquely yours.' },
+  { icon: Dices, title: 'Spin & Win',                   desc: 'Hit milestones, spin the wheel. Transparent odds, real rewards.' },
+  { icon: Users, title: 'Refer & Earn',                 desc: 'Share your link. When friends join and make their first purchase, you both earn bonus rewards.' },
+  { icon: Link,  title: 'Works Everywhere',             desc: 'One account across every app using ChainLoyalty. Your rewards follow you.' },
 ];
 
 export default function Features() {

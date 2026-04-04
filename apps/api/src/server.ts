@@ -25,6 +25,8 @@ import { leaderboardRoutes } from './routes/leaderboard.routes.js';
 import { appRoutes } from './routes/apps.routes.js';
 import { adminRoutes } from './routes/admin.routes.js';
 import { businessRoutes } from './routes/business.routes.js';
+import { companyRoutes } from './routes/company.routes.js';
+import { userAuthRoutes } from './routes/user-auth.routes.js';
 
 async function buildServer() {
   const server = Fastify({
@@ -38,7 +40,7 @@ async function buildServer() {
   });
 
   await server.register(cors, {
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:3001'],
     credentials: true,
   });
 
@@ -120,6 +122,8 @@ async function buildServer() {
   await server.register(appRoutes, { prefix: '/v1/apps' });
   await server.register(adminRoutes, { prefix: '/v1/admin' });
   await server.register(businessRoutes, { prefix: '/v1/business' });
+  await server.register(companyRoutes,  { prefix: '/v1/company' });
+  await server.register(userAuthRoutes, { prefix: '/v1/user-auth' });
 
   return server;
 }

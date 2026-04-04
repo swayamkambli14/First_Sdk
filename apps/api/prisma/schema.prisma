@@ -3,15 +3,114 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Apps — SaaS companies using ChainLoyalty
+// Companies — seller/business accounts that use ChainLoyalty
 // ─────────────────────────────────────────────────────────────────────────────
+model Company {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String   @db.VarChar(255)
+  email           String   @unique @db.VarChar(255)
+  passwordHash    String   @db.VarChar(255)       // bcrypt hash
+  // Profile
+  logoUrl         String?  @db.Text
+  website         String?  @db.VarChar(255)
+  industry        String?  @db.VarChar(100)
+  description     String?  @db.Text
+  // Contact
+  contactName     String?  @db.VarChar(255)
+  contactPhone    String?  @db.VarChar(30)
+  country         String?  @db.VarChar(100)
+  timezone        String   @default("UTC") @db.VarChar(50)
+  // Plan
+  plan            String   @default("free") @db.VarChar(20)  // free | starter | pro | enterprise
+  planExpiresAt   DateTime? @db.Timestamptz
+  // API Key (stored for dashboard use — raw key shown once, hash stored)
+  apiKeyHash      String?  @db.VarChar(255)
+  apiKeyPrefix    String?  @db.VarChar(10)
+  apiKeyCreatedAt DateTime? @db.Timestamptz
+  // Status
+  isActive        Boolean  @default(true)
+  emailVerified   Boolean  @default(false)
+  createdAt       DateTime @default(now()) @db.Timestamptz
+  updatedAt       DateTime @updatedAt @db.Timestamptz
+
+  apps     App[]
+  sessions CompanySession[]
+
+  @@index([email])
+  @@map("companies")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Company Sessions — dashboard login sessions (JWT alternative for web)
+// ─────────────────────────────────────────────────────────────────────────────
+model CompanySession {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId   String   @db.Uuid
+  tokenHash   String   @unique @db.VarChar(255)  // hashed session token
+  ipAddress   String?  @db.VarChar(45)
+  userAgent   String?  @db.Text
+  expiresAt   DateTime @db.Timestamptz
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([expiresAt])
+  @@map("company_sessions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Custodial Wallets — server-managed wallets for non-crypto users
+// ─────────────────────────────────────────────────────────────────────────────
+model CustodialWallet {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @unique @db.Uuid          // links to UserAccount
+  address      String    @unique @db.VarChar(42)   // Ethereum address (plaintext)
+  encryptedKey String    @db.Text                  // AES-256-GCM encrypted private key
+  iv           String    @db.VarChar(64)            // initialization vector (hex)
+  authTag      String    @db.VarChar(64)            // GCM auth tag (hex)
+  walletType   String    @default("custodial") @db.VarChar(20) // "custodial" | "self_custody"
+  createdAt    DateTime  @default(now()) @db.Timestamptz
+  lastUsedAt   DateTime? @db.Timestamptz
+
+  userAccount UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("custodial_wallets")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UserAccounts — unified identity for both custodial and web3 users
+// ─────────────────────────────────────────────────────────────────────────────
+model UserAccount {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String?  @unique @db.VarChar(255)  // custodial users
+  passwordHash  String?  @db.VarChar(255)          // bcrypt hash for email auth
+  googleId      String?  @unique @db.VarChar(255)  // Google OAuth
+  walletAddress String   @unique @db.VarChar(42)   // always present
+  walletMode    String   @default("custodial") @db.VarChar(20) // "custodial" | "web3"
+  displayName   String?  @db.VarChar(255)
+  avatarUrl     String?  @db.Text
+  onboardingComplete Boolean @default(false)
+  createdAt     DateTime @default(now()) @db.Timestamptz
+  updatedAt     DateTime @updatedAt @db.Timestamptz
+
+  custodialWallet CustodialWallet?
+
+  @@index([email])
+  @@index([walletAddress])
+  @@map("user_accounts")
+}
+
+
 model App {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId    String?  @db.Uuid                  // nullable for backward compat
   name         String   @db.VarChar(255)
   // Bcrypt hash of the API key — raw key is NEVER stored
   apiKeyHash   String   @unique @db.VarChar(255)
@@ -21,13 +120,16 @@ model App {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now()) @db.Timestamptz
 
-  users  User[]
-  events Event[]
-  businessRules     BusinessRule[]
+  company            Company?            @relation(fields: [companyId], references: [id])
+  users              User[]
+  events             Event[]
+  businessRules      BusinessRule[]
   businessTierConfig BusinessTierConfig?
-  businessBadges    BusinessBadge[]
+  businessBadges     BusinessBadge[]
+  analyticsSnapshots AppAnalyticsSnapshot[]
 
   @@index([apiKeyPrefix])
+  @@index([companyId])
   @@map("apps")
 }
 
@@ -229,4 +331,31 @@ model BusinessBadge {
   @@unique([appId, badgeId])
   @@index([appId])
   @@map("business_badges")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// App Analytics Snapshots — daily cached analytics per app
+// Avoids expensive COUNT queries on every dashboard load
+// ─────────────────────────────────────────────────────────────────────────────
+model AppAnalyticsSnapshot {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  appId               String   @db.Uuid
+  snapshotDate        DateTime @db.Date              // one row per app per day
+  totalUsers          Int      @default(0)
+  newUsers            Int      @default(0)
+  totalEvents         Int      @default(0)
+  totalRewardsIssued  Int      @default(0)
+  totalPointsIssued   BigInt   @default(0)
+  totalBadgesIssued   Int      @default(0)
+  totalReferrals      Int      @default(0)
+  topRuleId           String?  @db.VarChar(100)
+  topRuleFires        Int      @default(0)
+  tierDistribution    Json     @default("{}")        // { bronze: 10, silver: 5, ... }
+  createdAt           DateTime @default(now()) @db.Timestamptz
+
+  app App @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([appId, snapshotDate])
+  @@index([appId])
+  @@map("app_analytics_snapshots")
 }

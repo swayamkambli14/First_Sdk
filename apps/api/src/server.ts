@@ -1,3 +1,5 @@
+// Load .env before anything else
+import 'dotenv/config';
 // Load and validate env vars first — server refuses to start if any are missing
 import './config/env.js';
 import { env } from './config/env.js';
@@ -35,7 +37,7 @@ async function buildServer() {
   });
 
   await server.register(cors, {
-    origin: env.NODE_ENV === 'production' ? false : true,
+    origin: ['http://localhost:5173', 'http://localhost:3001'],
     credentials: true,
   });
 

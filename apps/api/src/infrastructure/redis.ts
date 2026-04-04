@@ -6,6 +6,7 @@ let redisClient: Redis | null = null;
 
 /**
  * Returns a singleton Redis client.
+ * Upstash uses rediss:// (TLS) — ioredis handles this automatically from the URL.
  * On connection error, logs and retries with backoff — does NOT crash the server.
  */
 export function getRedis(): Redis {
@@ -13,6 +14,8 @@ export function getRedis(): Redis {
 
   const client = new Redis(env.REDIS_URL, {
     maxRetriesPerRequest: 3,
+    // Upstash requires TLS — enable when URL starts with rediss://
+    tls: env.REDIS_URL.startsWith('rediss://') ? {} : undefined,
     retryStrategy(times: number) {
       const delay = Math.min(times * 200, 5000);
       logger.warn(`Redis retry attempt ${times}, waiting ${delay}ms`);
@@ -20,7 +23,7 @@ export function getRedis(): Redis {
     },
     reconnectOnError(err: Error) {
       logger.error('Redis connection error', { error: err.message });
-      return true; // always reconnect
+      return true;
     },
   });
 
@@ -30,8 +33,6 @@ export function getRedis(): Redis {
   redisClient = client;
   return redisClient;
 }
-
-// ── Helper functions ──────────────────────────────────────────────────────────
 
 export async function setex(key: string, ttlSeconds: number, value: string): Promise<void> {
   await getRedis().setex(key, ttlSeconds, value);

@@ -50,7 +50,10 @@ export async function countEventsByType(
 ): Promise<Record<string, number>> {
   const results = await prisma.event.groupBy({
     by: ['eventType'],
-    where: { walletAddress: walletAddress.toLowerCase(), status: 'completed' },
+    where: {
+      walletAddress: walletAddress.toLowerCase(),
+      status: { in: ['completed', 'pending'] }, // include pending so rules fire on first event
+    },
     _count: { eventType: true },
   });
 

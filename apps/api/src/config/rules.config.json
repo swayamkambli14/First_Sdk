@@ -1,0 +1,262 @@
+{
+  "version": "1.0",
+  "rules": [
+    {
+      "rule_id": "first_purchase_bonus",
+      "name": "First Purchase Bonus",
+      "description": "Award 100 points on a user's first ever purchase",
+      "enabled": true,
+      "priority": 10,
+      "type": "threshold",
+      "trigger_event": "purchase",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "user.lifetime_event_count.purchase", "op": "==", "value": 1 }
+        ]
+      },
+      "reward": {
+        "type": "points",
+        "amount": 100,
+        "reason": "First purchase reward"
+      },
+      "cooldown_hours": null,
+      "max_triggers_per_user": 1
+    },
+    {
+      "rule_id": "power_buyer_badge",
+      "name": "Power Buyer Badge",
+      "description": "Award badge when user spends over $500 total",
+      "enabled": true,
+      "priority": 20,
+      "type": "threshold",
+      "trigger_event": "purchase",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "user.cumulative_metadata.purchase.amount", "op": ">=", "value": 500 }
+        ]
+      },
+      "reward": {
+        "type": "badge",
+        "badge_id": "power_buyer",
+        "badge_name": "Power Buyer",
+        "badge_image_url": "/badges/power-buyer.png",
+        "rarity": "rare"
+      },
+      "cooldown_hours": null,
+      "max_triggers_per_user": 1
+    },
+    {
+      "rule_id": "top_referrer_badge",
+      "name": "Top Referrer Badge",
+      "description": "Award badge when user has referred 5 or more users",
+      "enabled": true,
+      "priority": 15,
+      "type": "threshold",
+      "trigger_event": "referral",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "user.lifetime_event_count.referral", "op": ">=", "value": 5 }
+        ]
+      },
+      "reward": {
+        "type": "badge",
+        "badge_id": "top_referrer",
+        "badge_name": "Top Referrer",
+        "badge_image_url": "/badges/top-referrer.png",
+        "rarity": "epic"
+      },
+      "cooldown_hours": null,
+      "max_triggers_per_user": 1
+    },
+    {
+      "rule_id": "weekly_active_bonus",
+      "name": "Weekly Active User",
+      "description": "Award 50 points if user has 5+ events in the last 7 days",
+      "enabled": true,
+      "priority": 15,
+      "type": "frequency",
+      "trigger_event": "*",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "user.event_count_in_window", "op": ">=", "value": 5 }
+        ]
+      },
+      "reward": {
+        "type": "points",
+        "amount": 50,
+        "reason": "Weekly activity bonus"
+      },
+      "cooldown_hours": 168,
+      "max_triggers_per_user": null
+    },
+    {
+      "rule_id": "monthly_power_user",
+      "name": "Monthly Power User",
+      "description": "Award 200 points for using features 10+ times in 30 days",
+      "enabled": true,
+      "priority": 12,
+      "type": "frequency",
+      "trigger_event": "feature_usage",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "user.lifetime_event_count.feature_usage", "op": ">=", "value": 10 }
+        ]
+      },
+      "reward": {
+        "type": "points",
+        "amount": 200,
+        "reason": "Monthly power user bonus"
+      },
+      "cooldown_hours": 720,
+      "max_triggers_per_user": null
+    },
+    {
+      "rule_id": "daily_streak_bonus",
+      "name": "Daily Streak Bonus",
+      "description": "Award 25 points for any activity in the last 3 days",
+      "enabled": true,
+      "priority": 8,
+      "type": "frequency",
+      "trigger_event": "*",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "user.event_count_in_window", "op": ">=", "value": 3 }
+        ]
+      },
+      "reward": {
+        "type": "points",
+        "amount": 25,
+        "reason": "Activity streak bonus"
+      },
+      "cooldown_hours": 72,
+      "max_triggers_per_user": null
+    },
+    {
+      "rule_id": "high_value_conditional",
+      "name": "Big Spender Bonus",
+      "description": "Gold or Platinum tier users get 3x points on purchases over $200",
+      "enabled": true,
+      "priority": 30,
+      "type": "conditional",
+      "trigger_event": "purchase",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "metadata.amount", "op": ">=", "value": 200 },
+          {
+            "operator": "OR",
+            "checks": [
+              { "field": "user.current_tier", "op": "==", "value": "gold" },
+              { "field": "user.current_tier", "op": "==", "value": "platinum" }
+            ]
+          }
+        ]
+      },
+      "reward": {
+        "type": "points",
+        "amount_formula": "metadata.amount * 3",
+        "reason": "Gold/Platinum tier big purchase multiplier"
+      },
+      "cooldown_hours": null,
+      "max_triggers_per_user": null
+    },
+    {
+      "rule_id": "pro_plan_milestone",
+      "name": "Pro Plan Milestone",
+      "description": "Award 150 points when a user upgrades to Pro or Enterprise plan",
+      "enabled": true,
+      "priority": 18,
+      "type": "conditional",
+      "trigger_event": "subscription",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "metadata.plan", "op": "in", "value": ["pro", "enterprise"] }
+        ]
+      },
+      "reward": {
+        "type": "points",
+        "amount": 150,
+        "reason": "Pro plan upgrade bonus"
+      },
+      "cooldown_hours": 720,
+      "max_triggers_per_user": null
+    },
+    {
+      "rule_id": "lucky_spin",
+      "name": "Lucky Spin on Subscription",
+      "description": "Users get a spin-wheel chance when they subscribe to pro or enterprise",
+      "enabled": true,
+      "priority": 5,
+      "type": "conditional",
+      "trigger_event": "subscription",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "metadata.plan", "op": "in", "value": ["pro", "enterprise"] }
+        ]
+      },
+      "reward": {
+        "type": "probabilistic",
+        "spin_pool_id": "subscription_pool"
+      },
+      "cooldown_hours": 720,
+      "max_triggers_per_user": null
+    },
+    {
+      "rule_id": "milestone_project_created",
+      "name": "First Project Created",
+      "description": "Award 75 points when user creates their first project",
+      "enabled": true,
+      "priority": 10,
+      "type": "threshold",
+      "trigger_event": "milestone",
+      "conditions": {
+        "operator": "AND",
+        "checks": [
+          { "field": "metadata.milestone_name", "op": "==", "value": "project_created" },
+          { "field": "user.lifetime_event_count.milestone", "op": "==", "value": 1 }
+        ]
+      },
+      "reward": {
+        "type": "points",
+        "amount": 75,
+        "reason": "First project created"
+      },
+      "cooldown_hours": null,
+      "max_triggers_per_user": 1
+    }
+  ],
+
+  "spin_pools": {
+    "subscription_pool": [
+      { "reward_type": "points", "amount": 25, "weight": 40 },
+      { "reward_type": "points", "amount": 100, "weight": 25 },
+      { "reward_type": "points", "amount": 250, "weight": 15 },
+      { "reward_type": "points", "amount": 500, "weight": 10 },
+      { "reward_type": "badge", "badge_id": "lucky_subscriber", "weight": 7 },
+      { "reward_type": "points", "amount": 1000, "weight": 3 }
+    ],
+    "purchase_pool": [
+      { "reward_type": "points", "amount": 10, "weight": 50 },
+      { "reward_type": "points", "amount": 50, "weight": 30 },
+      { "reward_type": "points", "amount": 100, "weight": 15 },
+      { "reward_type": "badge", "badge_id": "lucky_subscriber", "weight": 5 }
+    ]
+  },
+
+  "tier_config": {
+    "tiers": [
+      { "name": "bronze", "min_points": 0, "multiplier": 1.0 },
+      { "name": "silver", "min_points": 500, "multiplier": 1.25 },
+      { "name": "gold", "min_points": 2000, "multiplier": 1.5 },
+      { "name": "platinum", "min_points": 10000, "multiplier": 2.0 }
+    ]
+  }
+}

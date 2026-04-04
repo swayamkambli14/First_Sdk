@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Apps — SaaS companies using ChainLoyalty
+// ─────────────────────────────────────────────────────────────────────────────
+model App {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @db.VarChar(255)
+  // Bcrypt hash of the API key — raw key is NEVER stored
+  apiKeyHash   String   @unique @db.VarChar(255)
+  // Non-secret 6-char prefix for fast lookup before bcrypt compare
+  apiKeyPrefix String   @db.VarChar(10)
+  webhookUrl   String?  @db.Text
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now()) @db.Timestamptz
+
+  users  User[]
+  events Event[]
+
+  @@index([apiKeyPrefix])
+  @@map("apps")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Users — wallet-native identity
+// ─────────────────────────────────────────────────────────────────────────────
+model User {
+  walletAddress       String   @id @db.VarChar(42)
+  appId               String   @db.Uuid
+  referralCode        String   @unique @db.VarChar(20)
+  referredByWallet    String?  @db.VarChar(42)
+  currentTier         String   @default("bronze") @db.VarChar(20)
+  currentPointsBalance BigInt  @default(0)
+  totalPointsEarned   BigInt   @default(0)
+  firstSeenAt         DateTime @default(now()) @db.Timestamptz
+  lastActiveAt        DateTime @default(now()) @db.Timestamptz
+
+  app              App          @relation(fields: [appId], references: [id])
+  referredBy       User?        @relation("ReferralChain", fields: [referredByWallet], references: [walletAddress])
+  referrals        User[]       @relation("ReferralChain")
+  events           Event[]
+  rewards          Reward[]
+  ruleTriggers     RuleTrigger[]
+  referralsMade    Referral[]   @relation("ReferrerRelation")
+  referralReceived Referral?    @relation("RefereeRelation")
+
+  @@index([appId])
+  @@index([referralCode])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Events — append-only event log
+// ─────────────────────────────────────────────────────────────────────────────
+model Event {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  walletAddress  String    @db.VarChar(42)
+  appId          String    @db.Uuid
+  eventType      String    @db.VarChar(50)
+  // Flexible JSONB metadata — e.g., { amount: 75, currency: "USD" }
+  metadata       Json      @default("{}")
+  idempotencyKey String?   @unique @db.Uuid
+  status         String    @default("pending") @db.VarChar(20)
+  processedAt    DateTime? @db.Timestamptz
+  timestamp      DateTime  @default(now()) @db.Timestamptz
+  createdAt      DateTime  @default(now()) @db.Timestamptz
+
+  user    User     @relation(fields: [walletAddress], references: [walletAddress])
+  app     App      @relation(fields: [appId], references: [id])
+  rewards Reward[]
+  referralQualified Referral? @relation("QualifyingEvent")
+
+  @@index([walletAddress])
+  @@index([eventType, walletAddress])
+  @@index([timestamp])
+  @@index([appId])
+  @@map("events")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rewards — all rewards ever issued
+// ─────────────────────────────────────────────────────────────────────────────
+model Reward {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  walletAddress  String   @db.VarChar(42)
+  rewardType     String   @db.VarChar(20)
+  // JSONB: { amount: 100 } for points, { badge_id: "power_buyer" } for badges
+  rewardValue    Json
+  ruleId         String   @db.VarChar(100)
+  eventId        String?  @db.Uuid
+  reason         String?  @db.Text
+  onChainTxHash  String?  @db.VarChar(66)
+  onChainStatus  String?  @db.VarChar(20)
+  issuedAt       DateTime @default(now()) @db.Timestamptz
+
+  user         User         @relation(fields: [walletAddress], references: [walletAddress])
+  event        Event?       @relation(fields: [eventId], references: [id])
+  ruleTrigger  RuleTrigger?
+
+  @@index([walletAddress])
+  @@index([eventId])
+  @@map("rewards")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rule Triggers — tracks cooldown and max_triggers_per_user
+// ─────────────────────────────────────────────────────────────────────────────
+model RuleTrigger {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  walletAddress String   @db.VarChar(42)
+  ruleId        String   @db.VarChar(100)
+  triggeredAt   DateTime @default(now()) @db.Timestamptz
+  rewardId      String?  @unique @db.Uuid
+
+  user   User    @relation(fields: [walletAddress], references: [walletAddress])
+  reward Reward? @relation(fields: [rewardId], references: [id])
+
+  @@index([walletAddress, ruleId])
+  @@index([triggeredAt])
+  @@map("rule_triggers")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Referrals — referral chain with fraud status
+// ─────────────────────────────────────────────────────────────────────────────
+model Referral {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referrerWallet     String    @db.VarChar(42)
+  refereeWallet      String    @unique @db.VarChar(42)
+  referralCode       String    @db.VarChar(20)
+  status             String    @default("pending") @db.VarChar(20)
+  qualifyingEventId  String?   @unique @db.Uuid
+  fraudReason        String?   @db.Text
+  createdAt          DateTime  @default(now()) @db.Timestamptz
+  confirmedAt        DateTime? @db.Timestamptz
+
+  referrer         User   @relation("ReferrerRelation", fields: [referrerWallet], references: [walletAddress])
+  referee          User   @relation("RefereeRelation", fields: [refereeWallet], references: [walletAddress])
+  qualifyingEvent  Event? @relation("QualifyingEvent", fields: [qualifyingEventId], references: [id])
+
+  @@index([referrerWallet])
+  @@index([referralCode])
+  @@map("referrals")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Badge Definitions — master list of all possible badges
+// ─────────────────────────────────────────────────────────────────────────────
+model BadgeDefinition {
+  badgeId     String   @id @db.VarChar(100)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  imageUrl    String?  @db.Text
+  rarity      String   @default("common") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  @@map("badge_definitions")
+}

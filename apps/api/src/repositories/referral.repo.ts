@@ -24,8 +24,16 @@ export async function findReferralByReferee(refereeWallet: string): Promise<Refe
 }
 
 export async function findReferralByCode(referralCode: string): Promise<Referral | null> {
+  // Gap #5 fix: only return pending referrals that are not expired (30-day TTL)
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() - 30);
+
   return prisma.referral.findFirst({
-    where: { referralCode },
+    where: {
+      referralCode,
+      status: 'pending',
+      createdAt: { gte: expiryDate },
+    },
     orderBy: { createdAt: 'desc' },
   });
 }

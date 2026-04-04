@@ -37,10 +37,14 @@ export async function createBadgeReward(
   },
   tx?: PrismaTransaction
 ): Promise<Reward> {
+  // Gap #7 fix: enforce idempotency at the repo level too — check before inserting
+  const existing = await findBadgeByWallet(data.walletAddress, data.badgeId);
+  if (existing) return existing;
+
   const client = tx ?? prisma;
   return client.reward.create({
     data: {
-      walletAddress: data.walletAddress,
+      walletAddress: data.walletAddress.toLowerCase(),
       rewardType: 'badge',
       rewardValue: data.rewardValue ?? { badge_id: data.badgeId },
       ruleId: data.ruleId,

@@ -54,8 +54,14 @@ export async function dispatch(appId: string, payload: Record<string, unknown>):
       error: err instanceof Error ? err.message : String(err),
     });
 
-    // Queue a single retry after 30 seconds
-    await webhookRetryQueue.add('retry-webhook', { appId, payload });
+    // Gap #14 fix: add to retry queue with delay — BullMQ handles the 2 retry
+    // attempts configured in queues.ts (attempts: 2, delay: 30s). No manual
+    // retry count needed here; the queue config is the single source of truth.
+    await webhookRetryQueue.add(
+      'retry-webhook',
+      { appId, payload },
+      { delay: 30_000 } // first retry after 30s; second after 60s (exponential)
+    );
   }
 }
 

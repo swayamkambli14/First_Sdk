@@ -55,9 +55,12 @@ export function evaluateFormula(formula: string, context: EvalContext): number {
 
     return capped;
   } catch (err) {
-    logger.warn('Formula evaluation failed', {
+    // Gap #8 fix: log the exact formula and error so it's never silent
+    logger.warn('Formula evaluation failed — returning 0 points', {
       formula,
+      resolvedFormula: formula, // logged before resolution attempt
       error: err instanceof Error ? err.message : String(err),
+      context_keys: Object.keys(context),
     });
     return 0;
   }

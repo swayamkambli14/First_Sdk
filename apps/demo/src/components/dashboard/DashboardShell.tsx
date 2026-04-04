@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAccount, useBalance, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAuth } from '../../hooks/useAuth';
+import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
+import { useRewardSocket, RewardEvent } from '../../hooks/useRewardSocket';
 import { useNavigate } from 'react-router-dom';
 import MobileNav from './MobileNav';
 import OverviewTab from '../tabs/OverviewTab';
@@ -29,29 +30,28 @@ function abbrev(addr: string) {
 export default function DashboardShell() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
-  const { user, signOut, updateWallet } = useAuth();
+  const { walletAddress, isAuthenticated, logout, tier, points } = useChainLoyaltyAuth();
+
+  // Gap #3: real-time reward notifications via WebSocket
+  const handleReward = useCallback((reward: RewardEvent) => {
+    const msg = reward.type === 'badge'
+      ? `🏅 Badge earned: ${reward.badge_name ?? reward.badge_id}`
+      : `⚡ +${reward.amount} pts — ${reward.reason ?? 'Reward'}`;
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  }, []);
+  useRewardSocket(handleReward);
   const navigate = useNavigate();
 
-  // Wagmi
-  const { address: walletAddress, isConnected } = useAccount();
+  // Wagmi — for ETH balance display only
+  const { address: wagmiAddress, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
-  const { data: ethBalance } = useBalance({ address: walletAddress });
-
-  // Save wallet to Supabase when connected
-  const handleWalletConnected = async (addr: string) => {
-    if (user && user.wallet_address !== addr) {
-      await updateWallet(addr);
-    }
-  };
-
-  // Run once when wallet connects
-  useState(() => {
-    if (isConnected && walletAddress) handleWalletConnected(walletAddress);
-  });
+  const { data: ethBalance } = useBalance({ address: wagmiAddress });
 
   const copyAddress = () => {
-    const addr = walletAddress ?? user?.wallet_address;
+    const addr = walletAddress;
     if (addr) {
       navigator.clipboard.writeText(addr);
       setCopied(true);
@@ -60,8 +60,7 @@ export default function DashboardShell() {
   };
 
   const handleLogout = async () => {
-    if (isConnected) disconnect();
-    signOut();
+    await logout();
     navigate('/');
   };
 
@@ -99,7 +98,7 @@ export default function DashboardShell() {
           </span>
 
           {/* Wallet: connected state */}
-          {isConnected && walletAddress ? (
+          {isConnected && wagmiAddress ? (
             <div className="flex items-center gap-2">
               <button
                 onClick={copyAddress}
@@ -108,7 +107,7 @@ export default function DashboardShell() {
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
                 <div className="text-left">
                   <div className="font-mono text-xs text-gray-300">
-                    {copied ? 'Copied!' : abbrev(walletAddress)}
+                    {copied ? 'Copied!' : walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : ''}
                   </div>
                   {ethBalance && (
                     <div className="font-mono text-[10px] text-cyan-400">
@@ -161,11 +160,15 @@ export default function DashboardShell() {
             ))}
           </nav>
 
-          {/* Sidebar footer — user info + logout */}
+          {/* Sidebar footer — wallet info + logout */}
           <div className="p-4 border-t border-white/10 space-y-3">
             <div className="px-3">
-              <div className="text-xs text-gray-300 font-medium truncate">{user?.name ?? user?.email}</div>
-              <div className="text-[10px] text-gray-600 truncate">{user?.email}</div>
+              <div className="text-xs text-gray-300 font-mono truncate">
+                {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Not connected'}
+              </div>
+              {tier && (
+                <div className="text-[10px] text-cyan-400 font-mono capitalize">{tier} tier · {points ?? '0'} pts</div>
+              )}
             </div>
             <button
               onClick={handleLogout}
@@ -188,11 +191,24 @@ export default function DashboardShell() {
       {/* Mobile bottom nav */}
       <MobileNav active={activeTab} onChange={setActiveTab} />
 
+      {/* Real-time reward toast — Gap #3 */}
+      {toast && (
+        <div className="fixed bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0d1a1a] border border-cyan-500/40 text-cyan-300 font-mono text-sm px-5 py-3 rounded-xl shadow-2xl animate-bounce-in whitespace-nowrap">
+          {toast}
+        </div>
+      )}
+
       <style>{`
         @keyframes tabIn {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes bounce-in {
+          0%   { opacity: 0; transform: translateX(-50%) translateY(12px); }
+          60%  { transform: translateX(-50%) translateY(-4px); }
+          100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .animate-bounce-in { animation: bounce-in 0.35s ease-out both; }
       `}</style>
     </div>
   );

@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import AuthModal from '../AuthModal';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
 
 export default function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { user } = useAuth();
+  const { isAuthenticated } = useChainLoyaltyAuth();
   const navigate = useNavigate();
-  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    if (user) navigate('/dashboard');
-  }, [user, navigate]);
+    if (isAuthenticated) navigate('/dashboard');
+  }, [isAuthenticated, navigate]);
 
   // Dot-grid canvas animation
   useEffect(() => {
@@ -97,12 +96,16 @@ export default function Hero() {
           </p>
 
           <div className="flex flex-wrap gap-4">
-            <button
-              onClick={() => setShowAuth(true)}
-              className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-['Space_Mono'] font-bold text-sm rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] active:scale-[0.97]"
-            >
-              Get Started
-            </button>
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <button
+                  onClick={openConnectModal}
+                  className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-['Space_Mono'] font-bold text-sm rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] active:scale-[0.97]"
+                >
+                  🦊 Connect Wallet
+                </button>
+              )}
+            </ConnectButton.Custom>
             <a
               href="#how-it-works"
               className="px-6 py-3 border border-white/20 hover:border-cyan-500/50 text-white font-['Space_Mono'] text-sm rounded-lg transition-all duration-200 hover:bg-white/5 active:scale-[0.97]"
@@ -161,8 +164,6 @@ export default function Hero() {
           </div>
         </div>
       </div>
-
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
 
       <style>{`
         @keyframes float {

@@ -37,7 +37,7 @@ async function buildServer() {
   });
 
   await server.register(cors, {
-    origin: ['http://localhost:5173', 'http://localhost:3001'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001'],
     credentials: true,
   });
 
@@ -133,8 +133,14 @@ async function start() {
     const httpServer = createServer(app.server);
     initWebSocket(httpServer);
 
-    // Start BullMQ event worker
-    startEventWorker();
+    // Start BullMQ event worker — Gap #12: wrap in error handler
+    try {
+      startEventWorker();
+      logger.info('Event worker started');
+    } catch (err) {
+      logger.error('Failed to start event worker — events will not be processed', { error: err });
+      // Don't exit — API can still accept events and queue them; worker can be restarted
+    }
 
     await app.listen({ port: env.PORT, host: '0.0.0.0' });
 

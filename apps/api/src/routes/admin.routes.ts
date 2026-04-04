@@ -1,11 +1,13 @@
 import { FastifyInstance } from 'fastify';
+import { PrismaClient } from '@prisma/client';
 import { adminMiddleware } from '../middleware/jwt.middleware.js';
 import { getRules, reloadRules } from '../config/rules.loader.js';
 import { evaluateConditions } from '../services/rules/condition.evaluator.js';
-import { buildContext } from '../services/rules/context.builder.js';
-import { countTriggers } from '../repositories/reward.repo.js';
 import { NotFoundError } from '../utils/errors.js';
 import type { Event as PrismaEvent, User } from '@prisma/client';
+
+// Gap #13 fix: use a module-level singleton instead of creating a new client per request
+const prisma = new PrismaClient();
 
 export async function adminRoutes(fastify: FastifyInstance) {
   // All admin routes require the ADMIN_SECRET header
@@ -98,9 +100,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
     const rule = rules.find((r) => r.rule_id === id);
     if (!rule) throw new NotFoundError(`Rule ${id} not found`, 'RULE_NOT_FOUND');
 
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-
+    // Gap #13 fix: use the module-level singleton
     const totalTriggers = await prisma.ruleTrigger.count({ where: { ruleId: id } });
     const uniqueUsers = await prisma.ruleTrigger.groupBy({
       by: ['walletAddress'],

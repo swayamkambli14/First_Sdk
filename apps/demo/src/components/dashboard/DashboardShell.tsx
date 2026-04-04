@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
+import { useAccount, useBalance, useDisconnect } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import MobileNav from './MobileNav';
 import OverviewTab from '../tabs/OverviewTab';
 import RewardsTab from '../tabs/RewardsTab';
@@ -11,12 +14,12 @@ import SettingsTab from '../tabs/SettingsTab';
 type Tab = 'overview' | 'rewards' | 'spend' | 'leaderboard' | 'referrals' | 'settings';
 
 const sidebarItems: { id: Tab; icon: string; label: string }[] = [
-  { id: 'overview', icon: '⊞', label: 'Overview' },
-  { id: 'rewards', icon: '🏆', label: 'My Rewards' },
-  { id: 'spend', icon: '⚡', label: 'Spend Points' },
-  { id: 'leaderboard', icon: '📊', label: 'Leaderboard' },
-  { id: 'referrals', icon: '👥', label: 'Referrals' },
-  { id: 'settings', icon: '⚙', label: 'Settings' },
+  { id: 'overview',     icon: '⊞', label: 'Overview' },
+  { id: 'rewards',      icon: '🏆', label: 'My Rewards' },
+  { id: 'spend',        icon: '⚡', label: 'Spend Points' },
+  { id: 'leaderboard',  icon: '📊', label: 'Leaderboard' },
+  { id: 'referrals',    icon: '👥', label: 'Referrals' },
+  { id: 'settings',     icon: '⚙', label: 'Settings' },
 ];
 
 function abbrev(addr: string) {
@@ -26,25 +29,51 @@ function abbrev(addr: string) {
 export default function DashboardShell() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [copied, setCopied] = useState(false);
-  const { walletAddress, logout } = useChainLoyaltyAuth();
+
+  const { user, signOut, updateWallet } = useAuth();
+  const navigate = useNavigate();
+
+  // Wagmi
+  const { address: walletAddress, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { data: ethBalance } = useBalance({ address: walletAddress });
+
+  // Save wallet to Supabase when connected
+  const handleWalletConnected = async (addr: string) => {
+    if (user && user.wallet_address !== addr) {
+      await updateWallet(addr);
+    }
+  };
+
+  // Run once when wallet connects
+  useState(() => {
+    if (isConnected && walletAddress) handleWalletConnected(walletAddress);
+  });
 
   const copyAddress = () => {
-    if (walletAddress) {
-      navigator.clipboard.writeText(walletAddress);
+    const addr = walletAddress ?? user?.wallet_address;
+    if (addr) {
+      navigator.clipboard.writeText(addr);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
+  const handleLogout = async () => {
+    if (isConnected) disconnect();
+    signOut();
+    navigate('/');
+  };
+
   const renderTab = () => {
     const props = { key: activeTab };
     switch (activeTab) {
-      case 'overview': return <OverviewTab {...props} />;
-      case 'rewards': return <RewardsTab {...props} />;
-      case 'spend': return <SpendTab {...props} />;
+      case 'overview':    return <OverviewTab {...props} />;
+      case 'rewards':     return <RewardsTab {...props} />;
+      case 'spend':       return <SpendTab {...props} />;
       case 'leaderboard': return <LeaderboardTab {...props} />;
-      case 'referrals': return <ReferralsTab {...props} />;
-      case 'settings': return <SettingsTab {...props} />;
+      case 'referrals':   return <ReferralsTab {...props} />;
+      case 'settings':    return <SettingsTab {...props} />;
     }
   };
 
@@ -69,16 +98,46 @@ export default function DashboardShell() {
             Sepolia
           </span>
 
-          {/* Wallet pill */}
-          <button
-            onClick={copyAddress}
-            className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-all duration-200 min-h-[36px]"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-            <span className="font-mono text-xs text-gray-300">
-              {copied ? 'Copied!' : abbrev(walletAddress ?? '0x0000...0000')}
-            </span>
-          </button>
+          {/* Wallet: connected state */}
+          {isConnected && walletAddress ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={copyAddress}
+                className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-cyan-500/30 px-3 py-1.5 rounded-lg transition-all duration-200 min-h-[36px]"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                <div className="text-left">
+                  <div className="font-mono text-xs text-gray-300">
+                    {copied ? 'Copied!' : abbrev(walletAddress)}
+                  </div>
+                  {ethBalance && (
+                    <div className="font-mono text-[10px] text-cyan-400">
+                      {parseFloat(ethBalance.formatted).toFixed(4)} {ethBalance.symbol}
+                    </div>
+                  )}
+                </div>
+              </button>
+              <button
+                onClick={() => disconnect()}
+                className="text-gray-500 hover:text-red-400 text-xs px-2 py-1.5 rounded-lg hover:bg-red-500/10 transition-all"
+                title="Disconnect wallet"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            /* Wallet: not connected */
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <button
+                  onClick={openConnectModal}
+                  className="flex items-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-mono text-xs px-3 py-1.5 rounded-lg transition-all min-h-[36px]"
+                >
+                  🦊 Connect Wallet
+                </button>
+              )}
+            </ConnectButton.Custom>
+          )}
         </div>
       </header>
 
@@ -102,23 +161,25 @@ export default function DashboardShell() {
             ))}
           </nav>
 
-          <div className="p-4 border-t border-white/10">
+          {/* Sidebar footer — user info + logout */}
+          <div className="p-4 border-t border-white/10 space-y-3">
+            <div className="px-3">
+              <div className="text-xs text-gray-300 font-medium truncate">{user?.name ?? user?.email}</div>
+              <div className="text-[10px] text-gray-600 truncate">{user?.email}</div>
+            </div>
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all duration-150 min-h-[44px]"
             >
               <span className="text-base w-5 text-center">⏻</span>
-              <span className="font-['DM_Sans']">Disconnect</span>
+              <span className="font-['DM_Sans']">Log Out</span>
             </button>
           </div>
         </aside>
 
         {/* Main content */}
         <main className="flex-1 lg:ml-60 pb-20 lg:pb-8 overflow-auto">
-          <div
-            className="p-4 lg:p-8 animate-in"
-            style={{ animation: 'tabIn 200ms ease-out' }}
-          >
+          <div className="p-4 lg:p-8" style={{ animation: 'tabIn 200ms ease-out' }}>
             {renderTab()}
           </div>
         </main>
@@ -130,7 +191,7 @@ export default function DashboardShell() {
       <style>{`
         @keyframes tabIn {
           from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

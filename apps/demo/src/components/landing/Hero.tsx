@@ -1,20 +1,17 @@
-import { useEffect, useRef } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
+import { useAuth } from '../../hooks/useAuth';
+import AuthModal from '../AuthModal';
 
 export default function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { isConnected, isAuthenticated, login, isLoading } = useChainLoyaltyAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) navigate('/dashboard');
-  }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
-    if (isConnected && !isAuthenticated && !isLoading) login();
-  }, [isConnected, isAuthenticated, isLoading, login]);
+    if (user) navigate('/dashboard');
+  }, [user, navigate]);
 
   // Dot-grid canvas animation
   useEffect(() => {
@@ -67,14 +64,12 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-[#0a0a0f]">
-      {/* Animated dot grid */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full pointer-events-none"
         style={{ opacity: 0.9 }}
       />
 
-      {/* Radial glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-cyan-500/5 blur-[120px]" />
         <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full bg-amber-500/4 blur-[100px]" />
@@ -98,20 +93,16 @@ export default function Hero() {
 
           <p className="font-['DM_Sans'] text-gray-400 text-lg leading-relaxed max-w-lg">
             ChainLoyalty turns every user action into a verifiable on-chain reward.
-            No accounts. No passwords. Just your wallet.
+            Sign up with email, then connect your wallet on the dashboard.
           </p>
 
           <div className="flex flex-wrap gap-4">
-            <ConnectButton.Custom>
-              {({ openConnectModal }) => (
-                <button
-                  onClick={openConnectModal}
-                  className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-['Space_Mono'] font-bold text-sm rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] active:scale-[0.97]"
-                >
-                  Connect Wallet
-                </button>
-              )}
-            </ConnectButton.Custom>
+            <button
+              onClick={() => setShowAuth(true)}
+              className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-['Space_Mono'] font-bold text-sm rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] active:scale-[0.97]"
+            >
+              Get Started
+            </button>
             <a
               href="#how-it-works"
               className="px-6 py-3 border border-white/20 hover:border-cyan-500/50 text-white font-['Space_Mono'] text-sm rounded-lg transition-all duration-200 hover:bg-white/5 active:scale-[0.97]"
@@ -119,25 +110,16 @@ export default function Hero() {
               See How It Works
             </a>
           </div>
-
-          {isLoading && (
-            <p className="text-cyan-400 text-sm font-mono animate-pulse">
-              ◈ Signing in with your wallet...
-            </p>
-          )}
         </div>
 
         {/* Right: Floating mockup card */}
         <div className="hidden lg:flex justify-center">
           <div className="relative">
-            {/* Glow behind card */}
             <div className="absolute inset-0 bg-cyan-500/10 blur-3xl rounded-3xl scale-110" />
-
             <div
               className="relative backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-6 w-80 shadow-2xl"
               style={{ animation: 'float 4s ease-in-out infinite' }}
             >
-              {/* Card header */}
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-gray-500 text-xs font-mono">WALLET</p>
@@ -148,8 +130,6 @@ export default function Hero() {
                   <span className="text-green-400 text-xs font-mono">Sepolia</span>
                 </div>
               </div>
-
-              {/* Stats */}
               <div className="grid grid-cols-2 gap-3 mb-5">
                 <div className="bg-white/5 rounded-xl p-3 border border-white/5">
                   <p className="text-gray-500 text-xs font-mono mb-1">POINTS</p>
@@ -160,42 +140,29 @@ export default function Hero() {
                   <p className="text-gray-300 text-2xl font-['Space_Mono'] font-bold">Silver</p>
                 </div>
               </div>
-
-              {/* Badges */}
               <div className="bg-white/5 rounded-xl p-3 border border-white/5 mb-4">
                 <p className="text-gray-500 text-xs font-mono mb-2">BADGES</p>
                 <div className="flex gap-2">
                   {['🔥', '⚡', '🛒', '👥', '🎯'].map((b, i) => (
-                    <span
-                      key={i}
-                      className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sm border border-white/10"
-                    >
-                      {b}
-                    </span>
+                    <span key={i} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sm border border-white/10">{b}</span>
                   ))}
-                  <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-xs text-gray-500 border border-white/10">
-                    +2
-                  </span>
                 </div>
               </div>
-
-              {/* Progress bar */}
               <div>
                 <div className="flex justify-between text-xs font-mono mb-1.5">
                   <span className="text-gray-500">Silver → Gold</span>
                   <span className="text-cyan-400">60%</span>
                 </div>
                 <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-cyan-300 rounded-full"
-                    style={{ width: '60%' }}
-                  />
+                  <div className="h-full bg-gradient-to-r from-cyan-500 to-cyan-300 rounded-full" style={{ width: '60%' }} />
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
 
       <style>{`
         @keyframes float {

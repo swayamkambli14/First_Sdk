@@ -1,7 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --cyan: #00e5ff;
+  --amber: #f59e0b;
+  --bg: #0a0a0f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-gray-950 text-gray-100 font-sans;
+  background-color: var(--bg);
+  color: #f1f5f9;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.3);
+}
+
+/* RainbowKit overrides — match our dark theme */
+[data-rk] {
+  --rk-colors-accentColor: #00e5ff !important;
+  --rk-colors-accentColorForeground: #000 !important;
+  --rk-colors-modalBackground: #0d0d14 !important;
+  --rk-colors-modalBorder: rgba(255,255,255,0.1) !important;
+  --rk-colors-modalText: #f1f5f9 !important;
+  --rk-colors-modalTextSecondary: #94a3b8 !important;
+  --rk-colors-menuItemBackground: rgba(255,255,255,0.05) !important;
+  --rk-colors-closeButton: rgba(255,255,255,0.3) !important;
+  --rk-colors-closeButtonBackground: rgba(255,255,255,0.05) !important;
+  --rk-colors-connectButtonBackground: #00e5ff !important;
+  --rk-colors-connectButtonText: #000 !important;
+  --rk-radii-modal: 16px !important;
+  --rk-radii-menuButton: 12px !important;
+  --rk-radii-connectButton: 10px !important;
 }

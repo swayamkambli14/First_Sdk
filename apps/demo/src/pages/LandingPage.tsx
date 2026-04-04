@@ -1,59 +1,32 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useNavigate } from 'react-router-dom';
-import { useChainLoyaltyAuth } from '../hooks/useChainLoyaltyAuth';
-import { useEffect } from 'react';
+import Hero from '../components/landing/Hero';
+import Features from '../components/landing/Features';
+import HowItWorks from '../components/landing/HowItWorks';
+import StatsBar from '../components/landing/StatsBar';
 
 export default function LandingPage() {
-  const { isConnected, isAuthenticated, login, isLoading } = useChainLoyaltyAuth();
-  const navigate = useNavigate();
-
-  // Auto-redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) navigate('/dashboard');
-  }, [isAuthenticated, navigate]);
-
-  // Auto-trigger SIWE after wallet connects
-  useEffect(() => {
-    if (isConnected && !isAuthenticated && !isLoading) {
-      login();
-    }
-  }, [isConnected, isAuthenticated, isLoading, login]);
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <div className="max-w-2xl text-center space-y-8">
-        <div>
-          <h1 className="text-5xl font-bold text-white mb-2">TaskForge</h1>
-          <p className="text-purple-400 text-lg">Powered by ChainLoyalty</p>
-        </div>
+    <div className="bg-[#0a0a0f] min-h-screen">
+      <Hero />
+      <Features />
+      <HowItWorks />
+      <StatsBar />
 
-        <p className="text-gray-300 text-xl">
-          A project management tool that rewards you for every action — with real blockchain badges and points.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-          {[
-            { icon: '🏆', title: 'Earn Points', desc: 'Every action earns you loyalty points' },
-            { icon: '🎖️', title: 'Collect Badges', desc: 'Unlock NFT badges for milestones' },
-            { icon: '🎰', title: 'Spin to Win', desc: 'Probabilistic rewards on upgrades' },
-          ].map((f) => (
-            <div key={f.title} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-              <div className="text-3xl mb-2">{f.icon}</div>
-              <h3 className="font-semibold text-white">{f.title}</h3>
-              <p className="text-gray-400 text-sm">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col items-center gap-4">
-          <ConnectButton label="Connect Wallet to Get Started" />
-          {isLoading && (
-            <p className="text-purple-400 text-sm animate-pulse">
-              Signing in with your wallet...
+      {/* Footer */}
+      <footer className="bg-[#0a0a0f] border-t border-white/5 py-10 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="font-['Space_Mono'] text-cyan-400 font-bold text-base">
+              Chain<span className="text-white">Loyalty</span>
             </p>
-          )}
+            <p className="font-['DM_Sans'] text-gray-600 text-xs mt-1">
+              Web3 loyalty infrastructure for the on-chain era
+            </p>
+          </div>
+          <p className="font-mono text-xs text-gray-700">
+            Built for ChainLoyalty Hackathon
+          </p>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

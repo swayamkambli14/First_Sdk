@@ -39,13 +39,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, name: string): Promise<string | null> => {
-    // Check if email already exists
-    const { data: existing } = await supabase
+    // Check if email already exists (ignore PGRST116 = no rows found)
+    const { data: existing, error: checkError } = await supabase
       .from('users')
       .select('id')
       .eq('email', email)
       .single();
 
+    if (checkError && checkError.code !== 'PGRST116') return checkError.message;
     if (existing) return 'An account with this email already exists.';
 
     const { data, error } = await supabase
@@ -70,7 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('password', password)
       .single();
 
-    if (error || !data) return 'Invalid email or password.';
+    // Surface the real error instead of hiding it
+    if (error) return error.code === 'PGRST116' ? 'Invalid email or password.' : error.message;
+    if (!data) return 'Invalid email or password.';
 
     const profile = data as UserProfile;
 

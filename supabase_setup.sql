@@ -25,6 +25,10 @@ CREATE TABLE public.users (
 -- Disable RLS so anon key can read/write freely
 ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
 
+-- Grant PostgREST (Data API) access to anon and authenticated roles
+GRANT ALL ON public.users TO anon, authenticated;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+
 -- ─────────────────────────────────────────────
 -- Demo test users
 -- ─────────────────────────────────────────────

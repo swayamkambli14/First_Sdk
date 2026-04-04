@@ -1,4 +1,5 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { Lock } from 'lucide-react';
 import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
 
 export default function WalletGate() {
@@ -79,8 +80,8 @@ export default function WalletGate() {
             </ConnectButton.Custom>
           </div>
 
-          <p className="text-gray-600 text-xs font-mono mt-6">
-            🔒 We never access your private keys
+          <p className="text-gray-600 text-xs font-mono mt-6 flex items-center justify-center gap-1">
+            <Lock size={12} /> We never access your private keys
           </p>
 
           {isConnected && isLoading && (

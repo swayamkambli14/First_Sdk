@@ -1,23 +1,27 @@
 import type { Event as PrismaEvent } from '@prisma/client';
-import { getRules, getTierConfig } from '../config/rules.loader.js';
 import { Rule, RewardInstruction, EvalContext } from '../config/rules.types.js';
 import { findUserByWallet } from '../repositories/user.repo.js';
 import { getLastTriggerTime, countTriggers } from '../repositories/reward.repo.js';
 import { buildContext } from './rules/context.builder.js';
 import { evaluateConditions } from './rules/condition.evaluator.js';
 import { evaluateFormula } from './rules/formula.evaluator.js';
+import { getRulesForApp, getTierConfigForApp } from './business-rules.cache.js';
 import { NotFoundError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 
 /**
  * Core Rules Engine — evaluates all applicable rules for an event.
- * Returns an array of RewardInstructions to be executed by the RewardService.
  *
- * Algorithm (from TRD Section 7.2):
- * 1. Filter rules by enabled=true AND trigger_event matches
- * 2. Sort by priority descending (higher priority first)
- * 3. For each rule: check cooldown → check max_triggers → build context → evaluate conditions
- * 4. If matched: build RewardInstruction with tier multiplier applied
+ * CRITICAL: Rules are scoped per app_id. A business's rules NEVER affect
+ * another business's users. The appId is taken from the event record itself,
+ * which was set at ingestion time from the authenticated API key.
+ *
+ * Algorithm (TRD Section 7.2):
+ * 1. Load rules for THIS app_id only (cache → DB → global fallback)
+ * 2. Filter by enabled=true AND trigger_event matches
+ * 3. Sort by priority descending
+ * 4. For each rule: check cooldown → check max_triggers → build context → evaluate conditions
+ * 5. If matched: build RewardInstruction with THIS business's tier multiplier
  */
 export async function evaluate(event: PrismaEvent): Promise<RewardInstruction[]> {
   const user = await findUserByWallet(event.walletAddress);
@@ -25,17 +29,18 @@ export async function evaluate(event: PrismaEvent): Promise<RewardInstruction[]>
     throw new NotFoundError(`User not found: ${event.walletAddress}`, 'USER_NOT_FOUND');
   }
 
-  const allRules = getRules();
+  // ── ISOLATION GUARANTEE: load rules scoped to this event's app_id ──────────
+  const appId = event.appId;
+  const allRules = await getRulesForApp(appId);
   const instructions: RewardInstruction[] = [];
 
   // Filter to rules that apply to this event type
   const applicableRules = allRules
     .filter((r) => r.enabled)
     .filter((r) => r.trigger_event === event.eventType || r.trigger_event === '*')
-    .sort((a, b) => b.priority - a.priority); // highest priority first
+    .sort((a, b) => b.priority - a.priority);
 
-  // Build context once — shared across all rule evaluations for this event
-  // (context is built lazily below to avoid unnecessary DB calls if no rules apply)
+  // Build context lazily — only once per event evaluation
   let context: EvalContext | null = null;
 
   for (const rule of applicableRules) {
@@ -45,7 +50,7 @@ export async function evaluate(event: PrismaEvent): Promise<RewardInstruction[]>
       if (lastTriggered) {
         const hoursSince = (Date.now() - lastTriggered.getTime()) / 3_600_000;
         if (hoursSince < rule.cooldown_hours) {
-          logger.debug(`Rule ${rule.rule_id}: SKIP — in cooldown (${hoursSince.toFixed(1)}h / ${rule.cooldown_hours}h)`);
+          logger.debug(`Rule ${rule.rule_id}: SKIP — in cooldown`);
           continue;
         }
       }
@@ -55,32 +60,29 @@ export async function evaluate(event: PrismaEvent): Promise<RewardInstruction[]>
     if (rule.max_triggers_per_user !== null) {
       const triggerCount = await countTriggers(user.walletAddress, rule.rule_id);
       if (triggerCount >= rule.max_triggers_per_user) {
-        logger.debug(`Rule ${rule.rule_id}: SKIP — max triggers reached (${triggerCount}/${rule.max_triggers_per_user})`);
+        logger.debug(`Rule ${rule.rule_id}: SKIP — max triggers reached`);
         continue;
       }
     }
 
-    // ── Build context (lazy — only once per event evaluation) ───────────────
+    // ── Build context (lazy) ────────────────────────────────────────────────
     if (!context) {
       context = await buildContext(event, user);
     }
 
     // ── Evaluate conditions ─────────────────────────────────────────────────
     const matched = evaluateConditions(rule.conditions, context);
+    if (!matched) continue;
 
-    if (!matched) {
-      logger.debug(`Rule ${rule.rule_id}: SKIP — conditions not met`);
-      continue;
-    }
-
-    // ── Build reward instruction ────────────────────────────────────────────
-    const instruction = buildRewardInstruction(rule, context);
+    // ── Build reward instruction with THIS business's tier multiplier ────────
+    const instruction = await buildRewardInstruction(rule, context, appId);
     instructions.push(instruction);
 
-    logger.debug(`Rule ${rule.rule_id}: MATCH — reward: ${JSON.stringify(instruction)}`);
+    logger.debug(`Rule ${rule.rule_id}: MATCH`, { appId, reward: instruction });
   }
 
-  logger.info(`Rules evaluated for event ${event.id}`, {
+  logger.info(`Rules evaluated`, {
+    appId,
     event_type: event.eventType,
     wallet: event.walletAddress,
     rules_checked: applicableRules.length,
@@ -92,29 +94,25 @@ export async function evaluate(event: PrismaEvent): Promise<RewardInstruction[]>
 
 /**
  * Builds a RewardInstruction from a matched rule.
- * Resolves formula-based amounts and applies tier multipliers for points.
+ * Uses THIS business's tier config for multipliers — never another business's.
  */
-function buildRewardInstruction(rule: Rule, context: EvalContext): RewardInstruction {
+async function buildRewardInstruction(
+  rule: Rule,
+  context: EvalContext,
+  appId: string
+): Promise<RewardInstruction> {
   const reward = rule.reward;
 
   if (reward.type === 'points') {
     let amount = reward.amount ?? 0;
-
-    // Resolve formula if present (e.g., "metadata.amount * 3")
     if (reward.amount_formula) {
       amount = evaluateFormula(reward.amount_formula, context);
     }
-
-    // Apply tier multiplier
-    const multiplier = getTierMultiplier(context.user.current_tier);
+    // Apply THIS business's tier multiplier
+    const multiplier = await getTierMultiplierForApp(context.user.current_tier, appId);
     amount = Math.floor(amount * multiplier);
 
-    return {
-      rule_id: rule.rule_id,
-      type: 'points',
-      amount,
-      reason: reward.reason,
-    };
+    return { rule_id: rule.rule_id, type: 'points', amount, reason: reward.reason };
   }
 
   if (reward.type === 'badge') {
@@ -128,7 +126,6 @@ function buildRewardInstruction(rule: Rule, context: EvalContext): RewardInstruc
     };
   }
 
-  // Probabilistic — spin wheel
   return {
     rule_id: rule.rule_id,
     type: 'probabilistic',
@@ -137,12 +134,9 @@ function buildRewardInstruction(rule: Rule, context: EvalContext): RewardInstruc
   };
 }
 
-/**
- * Returns the points multiplier for a given tier.
- * Falls back to 1.0 if tier is not found in config.
- */
-function getTierMultiplier(tierName: string): number {
-  const tiers = getTierConfig();
-  const tier = tiers.find((t) => t.name === tierName);
+/** Returns the tier multiplier for a user's tier, scoped to their business */
+async function getTierMultiplierForApp(tierName: string, appId: string): Promise<number> {
+  const config = await getTierConfigForApp(appId);
+  const tier = config.tiers.find((t) => t.name === tierName);
   return tier?.multiplier ?? 1.0;
 }

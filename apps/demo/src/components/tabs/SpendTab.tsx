@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 import SpinWheel from '../widgets/SpinWheel';
 import RedeemGrid from '../widgets/RedeemGrid';
-import { DEMO_USER } from '../../lib/mockData';
+import { useUserStats } from '../../hooks/useRewardsData';
 
 type SubTab = 'spin' | 'redeem' | 'transfer';
 
@@ -11,6 +12,9 @@ export default function SpendTab() {
   const [amount, setAmount] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
   const [transferred, setTransferred] = useState(false);
+
+  const { stats } = useUserStats();
+  const userPoints = stats?.currentPointsBalance ?? 0;
 
   const abbrev = (addr: string) =>
     addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
@@ -80,7 +84,7 @@ export default function SpendTab() {
 
             <div>
               <label className="font-mono text-xs text-gray-500 uppercase tracking-widest block mb-2">
-                Amount (max {DEMO_USER.points.toLocaleString()} pts)
+                Amount (max {userPoints.toLocaleString()} pts)
               </label>
               <input
                 type="number"
@@ -88,7 +92,7 @@ export default function SpendTab() {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="100"
                 min={1}
-                max={DEMO_USER.points}
+                max={userPoints}
                 className="w-full bg-black/30 border border-white/10 focus:border-cyan-500/50 rounded-xl px-4 py-3 text-white font-mono text-sm outline-none transition-colors placeholder-gray-700 min-h-[44px]"
               />
             </div>
@@ -104,15 +108,16 @@ export default function SpendTab() {
 
             {/* Warning */}
             <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3 flex gap-2">
-              <span className="text-amber-400 flex-shrink-0">⚠️</span>
+              <AlertTriangle size={14} className="text-amber-400 flex-shrink-0 mt-0.5" />
               <p className="font-['DM_Sans'] text-amber-400/80 text-xs leading-relaxed">
                 Transfers are permanent and irreversible. Double-check the recipient address.
               </p>
             </div>
 
             {transferred && (
-              <div className="bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3">
-                <p className="font-mono text-xs text-green-400">✓ Transfer simulated successfully (demo)</p>
+              <div className="bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3 flex items-center gap-2">
+                <CheckCircle size={14} className="text-green-400" />
+                <p className="font-mono text-xs text-green-400">Transfer simulated successfully (demo)</p>
               </div>
             )}
 
@@ -142,8 +147,9 @@ export default function SpendTab() {
                 <span className="text-white font-mono text-sm">{abbrev(recipient)}</span>
               </div>
             </div>
-            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3 mb-6">
-              <p className="font-['DM_Sans'] text-amber-400/80 text-xs">⚠️ This action cannot be undone.</p>
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3 mb-6 flex gap-2">
+              <AlertTriangle size={14} className="text-amber-400 flex-shrink-0 mt-0.5" />
+              <p className="font-['DM_Sans'] text-amber-400/80 text-xs">This action cannot be undone.</p>
             </div>
             <div className="flex gap-3">
               <button

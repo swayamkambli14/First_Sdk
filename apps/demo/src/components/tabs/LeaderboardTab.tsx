@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Crown, Medal } from 'lucide-react';
 import { useLeaderboard } from '../../hooks/useRewardsData';
 import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
 
@@ -44,7 +45,7 @@ export default function LeaderboardTab() {
             const isFirst = idx === 0;
             return (
               <div key={idx} className="flex flex-col items-center gap-2">
-                {isFirst && <span className="text-2xl">👑</span>}
+                {isFirst && <Crown size={24} className="text-amber-400" />}
                 <div
                   className={`w-16 h-16 rounded-full flex items-center justify-center font-['Space_Mono'] font-bold text-sm border-2 ${
                     isFirst ? 'border-amber-400/50 bg-amber-400/10 text-amber-400' : 'border-white/20 bg-white/5 text-gray-300'
@@ -97,7 +98,7 @@ export default function LeaderboardTab() {
                     >
                       <td className="px-4 py-3 font-['Space_Mono'] text-sm text-gray-400">
                         #{entry.rank}
-                        {entry.rank <= 3 && <span className="ml-1">{['🥇', '🥈', '🥉'][entry.rank - 1]}</span>}
+                        {entry.rank <= 3 && <Medal size={14} className={`inline ml-1 ${['text-amber-400','text-gray-300','text-amber-600'][entry.rank-1]}`} />}
                       </td>
                       <td className="px-4 py-3 font-mono text-sm text-gray-300">
                         {entry.wallet_address}

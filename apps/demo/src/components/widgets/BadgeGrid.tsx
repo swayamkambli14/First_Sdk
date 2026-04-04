@@ -1,23 +1,24 @@
 import { useState } from 'react';
+import { Award, ShoppingCart, Users, Zap, Clover, Medal, Star, Trophy } from 'lucide-react';
 import { useBadges } from '../../hooks/useRewardsData';
 
 const RARITY_COLORS: Record<string, string> = {
-  common: 'border-white/10',
-  uncommon: 'border-green-500/30',
-  rare: 'border-blue-500/30',
-  epic: 'border-purple-500/30',
+  common:    'border-white/10',
+  uncommon:  'border-green-500/30',
+  rare:      'border-blue-500/30',
+  epic:      'border-purple-500/30',
   legendary: 'border-amber-500/40',
 };
 
-const BADGE_EMOJIS: Record<string, string> = {
-  power_buyer: '💎',
-  first_purchase: '🛒',
-  top_referrer: '👥',
-  power_user: '⚡',
-  lucky_subscriber: '🍀',
-  tier_silver: '🥈',
-  tier_gold: '🥇',
-  tier_platinum: '🏆',
+const BADGE_ICONS: Record<string, React.ReactNode> = {
+  power_buyer:       <Trophy size={28} className="text-amber-400" />,
+  first_purchase:    <ShoppingCart size={28} className="text-cyan-400" />,
+  top_referrer:      <Users size={28} className="text-green-400" />,
+  power_user:        <Zap size={28} className="text-yellow-400" />,
+  lucky_subscriber:  <Clover size={28} className="text-emerald-400" />,
+  tier_silver:       <Medal size={28} className="text-gray-300" />,
+  tier_gold:         <Medal size={28} className="text-amber-400" />,
+  tier_platinum:     <Trophy size={28} className="text-cyan-300" />,
 };
 
 export default function BadgeGrid() {
@@ -65,8 +66,8 @@ export default function BadgeGrid() {
               </div>
             )}
 
-            <div className="text-3xl mb-3">
-              {BADGE_EMOJIS[badge.badge_id] ?? '🏅'}
+            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-3">
+              {BADGE_ICONS[badge.badge_id] ?? <Award size={28} className="text-cyan-400" />}
             </div>
             <p className="font-['Space_Mono'] text-white text-xs font-bold mb-1 leading-tight">
               {badge.badge_name}

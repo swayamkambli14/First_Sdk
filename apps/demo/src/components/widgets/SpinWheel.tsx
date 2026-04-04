@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Sparkles, PartyPopper } from 'lucide-react';
 import { SPIN_SEGMENTS, DEMO_USER } from '../../lib/mockData';
 
 export default function SpinWheel() {
@@ -128,13 +129,11 @@ export default function SpinWheel() {
       {showModal && result && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
-            {/* Confetti dots */}
-            <div className="flex justify-center gap-1 mb-4">
-              {['🎉', '✨', '🎊', '⭐', '🎉'].map((e, i) => (
-                <span key={i} className="text-xl" style={{ animation: `bounce 0.5s ease ${i * 80}ms both` }}>
-                  {e}
-                </span>
-              ))}
+            {/* Celebration icons */}
+            <div className="flex justify-center gap-3 mb-4">
+              <Sparkles size={24} className="text-amber-400" style={{ animation: `bounce 0.5s ease 0ms both` }} />
+              <PartyPopper size={24} className="text-cyan-400" style={{ animation: `bounce 0.5s ease 80ms both` }} />
+              <Sparkles size={24} className="text-purple-400" style={{ animation: `bounce 0.5s ease 160ms both` }} />
             </div>
             <h3 className="font-['Space_Mono'] text-white text-2xl font-bold mb-2">You won!</h3>
             <p className="font-['Space_Mono'] text-amber-400 text-3xl font-bold mb-2">

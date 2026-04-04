@@ -23,6 +23,9 @@ model App {
 
   users  User[]
   events Event[]
+  businessRules     BusinessRule[]
+  businessTierConfig BusinessTierConfig?
+  businessBadges    BusinessBadge[]
 
   @@index([apiKeyPrefix])
   @@map("apps")
@@ -162,4 +165,68 @@ model BadgeDefinition {
   createdAt   DateTime @default(now()) @db.Timestamptz
 
   @@map("badge_definitions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Business Rules — per-business rule configuration (replaces global JSON file)
+// ─────────────────────────────────────────────────────────────────────────────
+model BusinessRule {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  appId         String   @db.Uuid
+  ruleId        String   @db.VarChar(100)  // business-defined identifier, unique per app
+  name          String   @db.VarChar(255)
+  description   String?  @db.Text
+  ruleType      String   @db.VarChar(20)   // threshold | frequency | conditional
+  triggerEvent  String   @db.VarChar(50)   // event type or '*'
+  conditions    Json                        // ConditionGroup JSONB
+  rewardConfig  Json                        // RewardConfig JSONB
+  priority      Int      @default(10)
+  enabled       Boolean  @default(true)
+  cooldownHours Int?
+  maxTriggers   Int?
+  createdAt     DateTime @default(now()) @db.Timestamptz
+  updatedAt     DateTime @updatedAt @db.Timestamptz
+
+  app App @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([appId, ruleId])
+  @@index([appId, enabled])
+  @@index([appId, triggerEvent])
+  @@map("business_rules")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Business Tier Config — per-business tier structure, currency name, spin pools
+// ─────────────────────────────────────────────────────────────────────────────
+model BusinessTierConfig {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  appId        String   @unique @db.Uuid   // one config per business
+  currencyName String   @default("points") @db.VarChar(50)  // e.g., "Stars", "XP", "Gems"
+  tiers        Json                         // TierConfig[] JSONB
+  spinPools    Json     @default("{}")      // Record<string, SpinPoolEntry[]> JSONB
+  updatedAt    DateTime @updatedAt @db.Timestamptz
+
+  app App @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@map("business_tier_configs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Business Badge Definitions — per-business badge catalog
+// ─────────────────────────────────────────────────────────────────────────────
+model BusinessBadge {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  appId       String   @db.Uuid
+  badgeId     String   @db.VarChar(100)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  imageUrl    String?  @db.Text
+  rarity      String   @default("common") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  app App @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([appId, badgeId])
+  @@index([appId])
+  @@map("business_badges")
 }

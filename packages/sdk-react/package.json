@@ -1,0 +1,30 @@
+{
+  "name": "@chainloyalty/react",
+  "version": "1.0.0",
+  "description": "React SDK for ChainLoyalty — hooks and components",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "wagmi": ">=2.0.0",
+    "viem": ">=2.0.0"
+  },
+  "dependencies": {
+    "@chainloyalty/sdk": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "typescript": "^5.4.5"
+  }
+}

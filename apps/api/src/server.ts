@@ -24,6 +24,7 @@ import { referralRoutes } from './routes/referrals.routes.js';
 import { leaderboardRoutes } from './routes/leaderboard.routes.js';
 import { appRoutes } from './routes/apps.routes.js';
 import { adminRoutes } from './routes/admin.routes.js';
+import { businessRoutes } from './routes/business.routes.js';
 
 async function buildServer() {
   const server = Fastify({
@@ -118,6 +119,7 @@ async function buildServer() {
   await server.register(leaderboardRoutes, { prefix: '/v1/leaderboard' });
   await server.register(appRoutes, { prefix: '/v1/apps' });
   await server.register(adminRoutes, { prefix: '/v1/admin' });
+  await server.register(businessRoutes, { prefix: '/v1/business' });
 
   return server;
 }

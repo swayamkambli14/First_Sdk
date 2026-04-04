@@ -1,11 +1,12 @@
+import { Award, Dices, Target, Zap } from 'lucide-react';
 import { useRewardHistory } from '../../hooks/useRewardsData';
 
-function rewardIcon(type: string, value: Record<string, unknown>): string {
-  if (type === 'badge') return '🏅';
-  if (type === 'probabilistic') return '🎰';
+function rewardIcon(type: string, value: Record<string, unknown>) {
+  if (type === 'badge') return <Award size={18} className="text-cyan-400" />;
+  if (type === 'probabilistic') return <Dices size={18} className="text-purple-400" />;
   const amt = Number(value['amount'] ?? 0);
-  if (amt >= 200) return '🎯';
-  return '⚡';
+  if (amt >= 200) return <Target size={18} className="text-amber-400" />;
+  return <Zap size={18} className="text-yellow-400" />;
 }
 
 export default function ActivityFeed() {
@@ -36,9 +37,9 @@ export default function ActivityFeed() {
                 className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.03] transition-colors"
                 style={{ animation: `fadeIn 300ms ease-out ${i * 50}ms both` }}
               >
-                <span className="text-xl w-8 text-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
                   {rewardIcon(item.reward_type, val)}
-                </span>
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-['DM_Sans'] text-white text-sm truncate">
                     {item.reason ?? item.reward_type}

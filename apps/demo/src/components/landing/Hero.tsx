@@ -102,7 +102,7 @@ export default function Hero() {
                   onClick={openConnectModal}
                   className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-['Space_Mono'] font-bold text-sm rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] active:scale-[0.97]"
                 >
-                  🦊 Connect Wallet
+                  Connect Wallet
                 </button>
               )}
             </ConnectButton.Custom>
@@ -150,8 +150,7 @@ export default function Hero() {
                     <span key={i} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sm border border-white/10">{b}</span>
                   ))}
                 </div>
-              </div>
-              <div>
+              </div>              <div>
                 <div className="flex justify-between text-xs font-mono mb-1.5">
                   <span className="text-gray-500">Silver → Gold</span>
                   <span className="text-cyan-400">60%</span>

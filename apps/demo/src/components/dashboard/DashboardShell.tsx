@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useAccount, useBalance, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import {
+  LayoutDashboard, Trophy, Zap, BarChart2, Users, Settings, LogOut, X,
+} from 'lucide-react';
 import { useChainLoyaltyAuth } from '../../hooks/useChainLoyaltyAuth';
 import { useRewardSocket, RewardEvent } from '../../hooks/useRewardSocket';
 import { useNavigate } from 'react-router-dom';
@@ -14,13 +17,13 @@ import SettingsTab from '../tabs/SettingsTab';
 
 type Tab = 'overview' | 'rewards' | 'spend' | 'leaderboard' | 'referrals' | 'settings';
 
-const sidebarItems: { id: Tab; icon: string; label: string }[] = [
-  { id: 'overview',     icon: '⊞', label: 'Overview' },
-  { id: 'rewards',      icon: '🏆', label: 'My Rewards' },
-  { id: 'spend',        icon: '⚡', label: 'Spend Points' },
-  { id: 'leaderboard',  icon: '📊', label: 'Leaderboard' },
-  { id: 'referrals',    icon: '👥', label: 'Referrals' },
-  { id: 'settings',     icon: '⚙', label: 'Settings' },
+const sidebarItems = [
+  { id: 'overview'    as Tab, icon: LayoutDashboard, label: 'Overview' },
+  { id: 'rewards'     as Tab, icon: Trophy,          label: 'My Rewards' },
+  { id: 'spend'       as Tab, icon: Zap,             label: 'Spend Points' },
+  { id: 'leaderboard' as Tab, icon: BarChart2,       label: 'Leaderboard' },
+  { id: 'referrals'   as Tab, icon: Users,           label: 'Referrals' },
+  { id: 'settings'    as Tab, icon: Settings,        label: 'Settings' },
 ];
 
 function abbrev(addr: string) {
@@ -37,8 +40,8 @@ export default function DashboardShell() {
   // Gap #3: real-time reward notifications via WebSocket
   const handleReward = useCallback((reward: RewardEvent) => {
     const msg = reward.type === 'badge'
-      ? `🏅 Badge earned: ${reward.badge_name ?? reward.badge_id}`
-      : `⚡ +${reward.amount} pts — ${reward.reason ?? 'Reward'}`;
+      ? `Badge earned: ${reward.badge_name ?? reward.badge_id}`
+      : `+${reward.amount} pts — ${reward.reason ?? 'Reward'}`;
     setToast(msg);
     setTimeout(() => setToast(null), 4000);
   }, []);
@@ -64,7 +67,7 @@ export default function DashboardShell() {
     navigate('/');
   };
 
-  const renderTab = () => {
+  const NAV = sidebarItems;
     const props = { key: activeTab };
     switch (activeTab) {
       case 'overview':    return <OverviewTab {...props} />;
@@ -118,10 +121,10 @@ export default function DashboardShell() {
               </button>
               <button
                 onClick={() => disconnect()}
-                className="text-gray-500 hover:text-red-400 text-xs px-2 py-1.5 rounded-lg hover:bg-red-500/10 transition-all"
+                className="text-gray-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all"
                 title="Disconnect wallet"
               >
-                ✕
+                <X size={14} />
               </button>
             </div>
           ) : (
@@ -132,7 +135,7 @@ export default function DashboardShell() {
                   onClick={openConnectModal}
                   className="flex items-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-mono text-xs px-3 py-1.5 rounded-lg transition-all min-h-[36px]"
                 >
-                  🦊 Connect Wallet
+                  Connect Wallet
                 </button>
               )}
             </ConnectButton.Custom>
@@ -144,7 +147,9 @@ export default function DashboardShell() {
         {/* Sidebar — desktop only */}
         <aside className="hidden lg:flex flex-col fixed left-0 top-14 bottom-0 w-60 bg-[#0d0d14] border-r border-white/10 z-30">
           <nav className="flex-1 p-4 space-y-1">
-            {sidebarItems.map((item) => (
+            {NAV.map((item) => {
+            const Icon = item.icon;
+            return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
@@ -154,10 +159,11 @@ export default function DashboardShell() {
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <span className="text-base w-5 text-center">{item.icon}</span>
+                <Icon size={16} className="flex-shrink-0" />
                 <span className="font-['DM_Sans'] font-medium">{item.label}</span>
               </button>
-            ))}
+            );
+          })}
           </nav>
 
           {/* Sidebar footer — wallet info + logout */}
@@ -174,7 +180,7 @@ export default function DashboardShell() {
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all duration-150 min-h-[44px]"
             >
-              <span className="text-base w-5 text-center">⏻</span>
+              <LogOut size={16} className="flex-shrink-0" />
               <span className="font-['DM_Sans']">Log Out</span>
             </button>
           </div>

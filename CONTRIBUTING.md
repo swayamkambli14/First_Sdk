@@ -42,15 +42,15 @@ If you’d like to use the repository from source, you can either install from g
 To install via git:
 
 ```sh
-$ npm install git+ssh://git@github.com:stainless-sdks/async-typescript.git
+$ npm install git+ssh://git@github.com:swayamkambli14/First_Sdk.git
 ```
 
 Alternatively, to link a local copy of the repo:
 
 ```sh
 # Clone
-$ git clone https://www.github.com/stainless-sdks/async-typescript
-$ cd async-typescript
+$ git clone https://www.github.com/swayamkambli14/First_Sdk
+$ cd First_Sdk
 
 # With yarn
 $ yarn link

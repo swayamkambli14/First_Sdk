@@ -102,6 +102,18 @@ export default function JoinPage() {
             <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4 text-green-700 text-sm">{success}</div>
           )}
 
+          {/* Demo credentials hint — only on login tab */}
+          {tab === 'login' && (
+            <div
+              className="bg-aurum-gold/10 border border-aurum-gold/30 rounded-xl px-4 py-3 mb-4 cursor-pointer hover:bg-aurum-gold/15 transition-colors"
+              onClick={() => { setEmail('guest@aurum.demo'); setPassword('aurum1234'); }}
+            >
+              <p className="text-aurum-gold text-xs font-semibold mb-0.5">Demo credentials — click to fill</p>
+              <p className="text-aurum-text-secondary text-xs font-mono">Email: guest@aurum.demo</p>
+              <p className="text-aurum-text-secondary text-xs font-mono">Password: aurum1234</p>
+            </div>
+          )}
+
           <form onSubmit={handleEmailAuth} className="space-y-4">
             {tab === 'signup' && (
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={inp} />

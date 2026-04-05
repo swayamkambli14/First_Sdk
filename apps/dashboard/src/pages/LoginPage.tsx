@@ -38,12 +38,17 @@ export default function LoginPage() {
     try {
       const res = await companyApi.login(email, password);
       const d = res.data as { company_id: string; name: string; email: string; logo_url?: string; plan: string; session_token: string };
-      // Fetch apps to get the active app id for business route auth
+      // Fetch apps to restore the previously-selected app, or fall back to the first one
       let activeAppId: string | undefined;
       try {
         const appsRes = await companyApi.getApps(d.session_token);
         const apps = (appsRes.data as { apps: Array<{ id: string }> }).apps;
-        if (apps.length > 0) activeAppId = apps[0]!.id;
+        if (apps.length > 0) {
+          // Prefer the app that was active before this login (persisted in localStorage)
+          const previousAppId = localStorage.getItem('cl_active_app_id');
+          const previousStillExists = previousAppId && apps.some((a) => a.id === previousAppId);
+          activeAppId = previousStillExists ? previousAppId : apps[apps.length - 1]!.id;
+        }
       } catch { /* no apps yet */ }
       setCompanyAuth({ company_id: d.company_id, name: d.name, email: d.email, logo_url: d.logo_url, plan: d.plan }, d.session_token, activeAppId);
       navigate('/');

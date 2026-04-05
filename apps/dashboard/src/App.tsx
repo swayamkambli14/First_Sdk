@@ -13,7 +13,7 @@ import BurnDashboard from './pages/BurnDashboard';
 import SdkPage from './pages/SdkPage';
 import CompanyPage from './pages/CompanyPage';
 import SetupWizard from './pages/SetupWizard';
-import { rulesApi } from './lib/api';
+import { rulesApi, getActiveAppId } from './lib/api';
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { loggedIn } = useAuth();
@@ -28,6 +28,8 @@ function AppRoutes() {
 
   useEffect(() => {
     if (!loggedIn || wizardChecked) return;
+    // Only check for wizard if an app is selected (otherwise business routes will 401)
+    if (!getActiveAppId()) { setWizardChecked(true); return; }
     // Show wizard if no rules configured yet
     rulesApi.list()
       .then((res) => {

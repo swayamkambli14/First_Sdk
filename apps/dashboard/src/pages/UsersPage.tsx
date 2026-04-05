@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users as UsersIcon, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { usersApi, getAppId } from '../lib/api';
+import { usersApi, getActiveAppId } from '../lib/api';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -29,7 +29,7 @@ export default function UsersPage() {
   const load = async (p: number) => {
     setLoading(true);
     try {
-      const res = await usersApi.list(getAppId(), p, 20);
+      const res = await usersApi.list(getActiveAppId(), p, 20);
       setUsers((res.data as { leaderboard: UserEntry[] }).leaderboard ?? []);
     } catch {
       setUsers([]);

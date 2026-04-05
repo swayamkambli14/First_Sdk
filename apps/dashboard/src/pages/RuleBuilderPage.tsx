@@ -25,6 +25,7 @@ interface Condition { field: string; op: string; value: string }
 
 interface FormState {
   rule_id: string; name: string; description: string;
+  rule_type: 'threshold' | 'frequency' | 'conditional';
   trigger_event: string; logic: 'AND' | 'OR';
   conditions: Condition[];
   reward_type: string; reward_amount: string; reward_badge_id: string; reward_spin_pool: string;
@@ -32,7 +33,7 @@ interface FormState {
 }
 
 const BLANK: FormState = {
-  rule_id: '', name: '', description: '', trigger_event: 'purchase', logic: 'AND',
+  rule_id: '', name: '', description: '', rule_type: 'threshold', trigger_event: 'purchase', logic: 'AND',
   conditions: [{ field: 'metadata.amount', op: '>=', value: '50' }],
   reward_type: 'points', reward_amount: '100', reward_badge_id: '', reward_spin_pool: 'default',
   priority: '10', cooldown_hours: '', max_triggers: '',
@@ -90,21 +91,29 @@ export default function RuleBuilderPage() {
     setSaving(true);
     setSaveError('');
     try {
-      const rewardConfig =
+      const reward =
         form.reward_type === 'points' ? { type: 'points', amount: parseInt(form.reward_amount) || 0 }
         : form.reward_type === 'badge' ? { type: 'badge', badge_id: form.reward_badge_id }
         : { type: 'probabilistic', spin_pool_id: form.reward_spin_pool };
+
+      // Coerce condition values to numbers where possible
+      const checks = form.conditions.map((c) => ({
+        field: c.field,
+        op: c.op,
+        value: c.value !== '' && !isNaN(Number(c.value)) ? Number(c.value) : c.value,
+      }));
 
       await rulesApi.create({
         rule_id: form.rule_id,
         name: form.name,
         description: form.description || undefined,
+        rule_type: form.rule_type,
         trigger_event: form.trigger_event,
-        conditions: { logic: form.logic, rules: form.conditions },
-        reward_config: rewardConfig,
+        conditions: { operator: form.logic, checks },
+        reward,
         priority: parseInt(form.priority) || 10,
-        cooldown_hours: form.cooldown_hours ? parseInt(form.cooldown_hours) : undefined,
-        max_triggers: form.max_triggers ? parseInt(form.max_triggers) : undefined,
+        cooldown_hours: form.cooldown_hours ? parseInt(form.cooldown_hours) : null,
+        max_triggers: form.max_triggers ? parseInt(form.max_triggers) : null,
       });
       setShowForm(false);
       setForm(BLANK);
@@ -158,8 +167,12 @@ export default function RuleBuilderPage() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">Priority</label>
-                  <input type="number" className={inputCls} value={form.priority} onChange={(e) => set('priority', e.target.value)} min={1} max={100} />
+                  <label className="block text-sm font-medium text-gray-700">Rule Type</label>
+                  <select className={inputCls} value={form.rule_type} onChange={(e) => set('rule_type', e.target.value as FormState['rule_type'])}>
+                    <option value="threshold">Threshold — trigger when a value crosses a limit</option>
+                    <option value="frequency">Frequency — trigger after N events in a window</option>
+                    <option value="conditional">Conditional — trigger when conditions match</option>
+                  </select>
                 </div>
               </div>
 
@@ -223,14 +236,18 @@ export default function RuleBuilderPage() {
               </div>
 
               {/* Limits */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Priority (1–100)</label>
+                  <input type="number" className={inputCls} value={form.priority} onChange={(e) => set('priority', e.target.value)} min={1} max={100} />
+                </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700">Cooldown (hours)</label>
-                  <input type="number" className={inputCls} value={form.cooldown_hours} onChange={(e) => set('cooldown_hours', e.target.value)} placeholder="Leave blank for none" min={0} />
+                  <input type="number" className={inputCls} value={form.cooldown_hours} onChange={(e) => set('cooldown_hours', e.target.value)} placeholder="None" min={0} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700">Max Triggers per User</label>
-                  <input type="number" className={inputCls} value={form.max_triggers} onChange={(e) => set('max_triggers', e.target.value)} placeholder="Leave blank for unlimited" min={1} />
+                  <input type="number" className={inputCls} value={form.max_triggers} onChange={(e) => set('max_triggers', e.target.value)} placeholder="Unlimited" min={1} />
                 </div>
               </div>
 

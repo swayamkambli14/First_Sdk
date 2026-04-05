@@ -28,14 +28,17 @@ export function isLoggedIn(): boolean {
   return !!getApiKey() && !!getAppId();
 }
 
+/** Returns the active app ID regardless of auth mode */
+export function getActiveAppId(): string {
+  // API key mode stores it as cl_app_id; company session mode as cl_active_app_id
+  return localStorage.getItem('cl_app_id') ?? localStorage.getItem('cl_active_app_id') ?? '';
+}
+
 const api = axios.create({ baseURL: BASE });
 
 api.interceptors.request.use((config) => {
   const apiKey = getApiKey();
   const companyToken = localStorage.getItem('cl_company_token');
-  const companyData = (() => {
-    try { return JSON.parse(localStorage.getItem('cl_company') ?? 'null'); } catch { return null; }
-  })();
 
   if (apiKey) {
     // API key mode — send raw key

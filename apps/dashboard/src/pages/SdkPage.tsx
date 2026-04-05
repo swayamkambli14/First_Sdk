@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Copy, Check, Key, Hash } from 'lucide-react';
-import { getApiKey, getAppId } from '../lib/api';
+import { getApiKey, getActiveAppId } from '../lib/api';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
 
 function CodeBlock({ code, lang = 'bash' }: { code: string; lang?: string }) {
@@ -27,7 +27,7 @@ function CodeBlock({ code, lang = 'bash' }: { code: string; lang?: string }) {
 
 export default function SdkPage() {
   const apiKey = getApiKey() || 'YOUR_API_KEY';
-  const appId = getAppId() || 'YOUR_APP_ID';
+  const appId = getActiveAppId() || 'YOUR_APP_ID';
 
   const installCode = `npm install axios`;
 

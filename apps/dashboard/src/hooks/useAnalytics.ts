@@ -17,30 +17,31 @@ export function useAnalytics() {
   const fetch = async () => {
     setLoading(true);
     setError(null);
+
+    const companyToken = localStorage.getItem('cl_company_token');
+    const activeAppId = localStorage.getItem('cl_active_app_id');
+
     try {
-      // Try business analytics first (API key auth)
-      const res = await analyticsApi.get();
-      setData(res.data as Analytics);
-    } catch {
-      // Fall back to company analytics (company session auth)
-      try {
-        const companyToken = localStorage.getItem('cl_company_token');
-        if (companyToken) {
-          const res = await companyApi.getAnalytics(companyToken);
-          const d = res.data as { total_users: number; total_events: number; total_rewards: number; apps_count: number };
-          setData({
-            total_users: d.total_users,
-            total_rewards_issued: d.total_rewards,
-            events_last_7_days: 0,
-            top_rules: [],
-            tier_distribution: [],
-          });
-        } else {
-          setError('Failed to load analytics');
-        }
-      } catch {
-        setError('Failed to load analytics');
+      if (activeAppId || localStorage.getItem('cl_api_key')) {
+        // Business analytics — full data (requires active app context)
+        const res = await analyticsApi.get();
+        setData(res.data as Analytics);
+      } else if (companyToken) {
+        // No app selected yet — fall back to company-level aggregate (limited data)
+        const res = await companyApi.getAnalytics(companyToken);
+        const d = res.data as { total_users: number; total_events: number; total_rewards: number; apps_count: number };
+        setData({
+          total_users: d.total_users,
+          total_rewards_issued: d.total_rewards,
+          events_last_7_days: 0,
+          top_rules: [],
+          tier_distribution: [],
+        });
+      } else {
+        setError('No active app selected');
       }
+    } catch {
+      setError('Failed to load analytics');
     } finally {
       setLoading(false);
     }

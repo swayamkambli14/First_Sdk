@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft, Check, Zap, Star, Users, Code } from 'lucide-react';
 import { useAuth } from '../lib/auth';
-import { tiersApi, rulesApi, getAppId } from '../lib/api';
+import { tiersApi, rulesApi, getActiveAppId } from '../lib/api';
 import { Button } from '../components/ui/Button';
 
 interface WizardProps {
@@ -68,7 +68,7 @@ export default function SetupWizard({ onComplete }: WizardProps) {
   const [ruleAmount, setRuleAmount] = useState(100);
   const [ruleThreshold, setRuleThreshold] = useState(10);
 
-  const appId = getAppId();
+  const appId = getActiveAppId();
   const template = RULE_TEMPLATES.find((t) => t.id === selectedTemplate)!;
 
   const inputCls = 'block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-gray-600';

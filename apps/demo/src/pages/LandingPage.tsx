@@ -207,6 +207,93 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Testimonials ─────────────────────────────────────────────────── */}
+      <section className="py-24 px-6 bg-aurum-ivory">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-aurum-gold text-xs tracking-[0.3em] uppercase mb-4">Guest Stories</p>
+            <h2 className="font-display text-5xl font-light text-aurum-midnight">
+              Loved by Our <em className="text-aurum-gold">Guests</em>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: 'Sophia R.',
+                tier: 'Diamond Key',
+                avatar: 'SR',
+                rating: 5,
+                text: 'The Aurum Circle program completely changed how I travel. I earned enough Gold in two stays to unlock a complimentary suite upgrade — the Presidential Suite was beyond anything I expected.',
+                stay: 'Presidential Suite, March 2026',
+              },
+              {
+                name: 'James L.',
+                tier: 'Platinum Key',
+                avatar: 'JL',
+                rating: 5,
+                text: "I've stayed at luxury hotels around the world, but none reward loyalty like Aurum. The Gold system is transparent, the tiers feel genuinely exclusive, and the concierge service at Platinum level is unmatched.",
+                stay: 'Grand Suite, February 2026',
+              },
+              {
+                name: 'Priya M.',
+                tier: 'Gold Key',
+                avatar: 'PM',
+                rating: 5,
+                text: 'Signing up took less than a minute and I immediately started earning Gold on my first dinner at The Aurum Restaurant. The spin wheel reward was a lovely surprise — I won a spa treatment!',
+                stay: 'Junior Suite, January 2026',
+              },
+              {
+                name: 'Marcus T.',
+                tier: 'Platinum Key',
+                avatar: 'MT',
+                rating: 5,
+                text: "The referral program is genuinely generous. I referred three colleagues for a corporate retreat and earned enough Gold to cover my next weekend stay. Aurum rewards loyalty in every sense.",
+                stay: 'Grand Suite, March 2026',
+              },
+              {
+                name: 'Elena V.',
+                tier: 'Diamond Key',
+                avatar: 'EV',
+                rating: 5,
+                text: 'What sets Aurum apart is the attention to detail — both in the rooms and in the rewards. My Diamond Key status means early check-in, late checkout, and a dedicated concierge who remembers my preferences.',
+                stay: 'Presidential Suite, February 2026',
+              },
+              {
+                name: 'David K.',
+                tier: 'Gold Key',
+                avatar: 'DK',
+                rating: 5,
+                text: "I was skeptical about another loyalty program, but Aurum Circle is different. The Gold I earn is real value — I redeemed it for a room upgrade on our anniversary trip. My wife was thrilled.",
+                stay: 'Junior Suite, December 2025',
+              },
+            ].map((t) => (
+              <div key={t.name} className="bg-white rounded-2xl p-7 shadow-card hover:shadow-gold transition-all duration-300 flex flex-col gap-4">
+                {/* Stars */}
+                <div className="flex gap-1">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <Star key={i} size={14} className="text-aurum-gold fill-aurum-gold" />
+                  ))}
+                </div>
+                {/* Quote */}
+                <p className="text-aurum-text-secondary text-sm leading-relaxed flex-1">
+                  "{t.text}"
+                </p>
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                  <div className="w-10 h-10 rounded-full bg-aurum-midnight flex items-center justify-center flex-shrink-0">
+                    <span className="text-aurum-gold text-xs font-semibold font-display">{t.avatar}</span>
+                  </div>
+                  <div>
+                    <p className="text-aurum-midnight font-semibold text-sm">{t.name}</p>
+                    <p className="text-aurum-gold text-xs">{t.tier} · {t.stay}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer className="bg-aurum-midnight py-16 px-6">
         <div className="max-w-7xl mx-auto">

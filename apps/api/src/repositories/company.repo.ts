@@ -105,7 +105,7 @@ export async function updateCompanyProfile(
 export async function getCompanyApps(companyId: string) {
   return prisma.app.findMany({
     where: { companyId },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'asc' },
     select: {
       id: true,
       name: true,

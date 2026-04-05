@@ -1,43 +1,12 @@
-# Environment variables — NEVER commit
-.env
-.env.local
-.env.*.local
-
-# Dependencies
-node_modules/
-**/node_modules/
-
-# Build outputs
-dist/
-build/
-**/dist/
-**/build/
-
-# Prisma
-apps/api/prisma/migrations/*.sql
-
-# Logs
-*.log
-logs/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/settings.json
+.prism.log
+.stdy.log
+node_modules
+yarn-error.log
+codegen.log
+Brewfile.lock.json
+dist
+dist-deno
+/*.tgz
 .idea/
+.eslintcache
 
-# Test coverage
-coverage/
-
-# Hardhat
-contracts/artifacts/
-contracts/cache/
-contracts/typechain-types/
-
-# Deployment artifacts (keep deployments/ but not secrets)
-contracts/deployments/*.json
-
-# TypeScript
-*.tsbuildinfo

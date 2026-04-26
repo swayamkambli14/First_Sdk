@@ -23,7 +23,7 @@ export class Users extends APIResource {
    * ```
    */
   listBadges(wallet: string, options?: RequestOptions): APIPromise<UserListBadgesResponse> {
-    return this._client.get(path`/users/${wallet}/badges`, { ...options, __security: {} });
+    return this._client.get(path`/users/${wallet}/badges`, { ...options, __security: {  } });
   }
 
   /**
@@ -36,12 +36,8 @@ export class Users extends APIResource {
    * );
    * ```
    */
-  listRewards(
-    wallet: string,
-    query: UserListRewardsParams | null | undefined = {},
-    options?: RequestOptions,
-  ): APIPromise<UserListRewardsResponse> {
-    return this._client.get(path`/users/${wallet}/rewards`, { query, ...options, __security: {} });
+  listRewards(wallet: string, query: UserListRewardsParams | null | undefined = {}, options?: RequestOptions): APIPromise<UserListRewardsResponse> {
+    return this._client.get(path`/users/${wallet}/rewards`, { query, ...options, __security: {  } });
   }
 
   /**
@@ -56,7 +52,7 @@ export class Users extends APIResource {
    * ```
    */
   retrievePoints(wallet: string, options?: RequestOptions): APIPromise<UserRetrievePointsResponse> {
-    return this._client.get(path`/users/${wallet}/points`, { ...options, __security: {} });
+    return this._client.get(path`/users/${wallet}/points`, { ...options, __security: {  } });
   }
 
   /**
@@ -71,7 +67,7 @@ export class Users extends APIResource {
    * ```
    */
   retrieveProfile(wallet: string, options?: RequestOptions): APIPromise<AuthAPI.UserProfile> {
-    return this._client.get(path`/users/${wallet}/profile`, { ...options, __security: {} });
+    return this._client.get(path`/users/${wallet}/profile`, { ...options, __security: {  } });
   }
 }
 
@@ -105,7 +101,7 @@ export interface Reward {
   reason?: string | null;
 }
 
-export type RewardType = 'points' | 'badge' | 'probabilistic';
+export type RewardType = 'points' | 'badge' | 'probabilistic'
 
 export interface UserListBadgesResponse {
   badges: Array<UserListBadgesResponse.Badge>;
@@ -167,6 +163,6 @@ export declare namespace Users {
     type UserListBadgesResponse as UserListBadgesResponse,
     type UserListRewardsResponse as UserListRewardsResponse,
     type UserRetrievePointsResponse as UserRetrievePointsResponse,
-    type UserListRewardsParams as UserListRewardsParams,
+    type UserListRewardsParams as UserListRewardsParams
   };
 }

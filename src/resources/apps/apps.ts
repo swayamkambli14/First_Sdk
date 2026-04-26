@@ -24,7 +24,7 @@ export class Apps extends APIResource {
    * ```
    */
   retrieve(id: string, options?: RequestOptions): APIPromise<AppRetrieveResponse> {
-    return this._client.get(path`/apps/${id}`, { ...options, __security: {} });
+    return this._client.get(path`/apps/${id}`, { ...options, __security: {  } });
   }
 
   /**
@@ -40,7 +40,7 @@ export class Apps extends APIResource {
    * ```
    */
   register(body: AppRegisterParams, options?: RequestOptions): APIPromise<AppRegisterResponse> {
-    return this._client.post('/apps/register', { body, ...options, __security: {} });
+    return this._client.post('/apps/register', { body, ...options, __security: {  } });
   }
 
   /**
@@ -56,12 +56,8 @@ export class Apps extends APIResource {
    * );
    * ```
    */
-  updateWebhook(
-    id: string,
-    body: AppUpdateWebhookParams,
-    options?: RequestOptions,
-  ): APIPromise<AppUpdateWebhookResponse> {
-    return this._client.put(path`/apps/${id}/webhook`, { body, ...options, __security: {} });
+  updateWebhook(id: string, body: AppUpdateWebhookParams, options?: RequestOptions): APIPromise<AppUpdateWebhookResponse> {
+    return this._client.put(path`/apps/${id}/webhook`, { body, ...options, __security: {  } });
   }
 }
 
@@ -115,8 +111,11 @@ export declare namespace Apps {
     type AppRegisterResponse as AppRegisterResponse,
     type AppUpdateWebhookResponse as AppUpdateWebhookResponse,
     type AppRegisterParams as AppRegisterParams,
-    type AppUpdateWebhookParams as AppUpdateWebhookParams,
+    type AppUpdateWebhookParams as AppUpdateWebhookParams
   };
 
-  export { Keys as Keys, type KeyRotateResponse as KeyRotateResponse };
+  export {
+    Keys as Keys,
+    type KeyRotateResponse as KeyRotateResponse
+  };
 }

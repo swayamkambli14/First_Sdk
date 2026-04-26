@@ -13,15 +13,12 @@ export class Leaderboard extends APIResource {
    * Public endpoint — no auth required. app_id is required to scope the leaderboard
    * to a specific SaaS integration. Supports all_time, monthly, and weekly periods.
    */
-  retrieve(
-    query: LeaderboardRetrieveParams,
-    options?: RequestOptions,
-  ): APIPromise<LeaderboardRetrieveResponse> {
-    return this._client.get('/leaderboard', { query, ...options, __security: {} });
+  retrieve(query: LeaderboardRetrieveParams, options?: RequestOptions): APIPromise<LeaderboardRetrieveResponse> {
+    return this._client.get('/leaderboard', { query, ...options, __security: {  } });
   }
 }
 
-export type LeaderboardPeriod = 'all_time' | 'monthly' | 'weekly';
+export type LeaderboardPeriod = 'all_time' | 'monthly' | 'weekly'
 
 export interface LeaderboardRetrieveResponse {
   leaderboard: Array<LeaderboardRetrieveResponse.Leaderboard>;
@@ -67,6 +64,6 @@ export declare namespace Leaderboard {
   export {
     type LeaderboardPeriod as LeaderboardPeriod,
     type LeaderboardRetrieveResponse as LeaderboardRetrieveResponse,
-    type LeaderboardRetrieveParams as LeaderboardRetrieveParams,
+    type LeaderboardRetrieveParams as LeaderboardRetrieveParams
   };
 }

@@ -22,7 +22,7 @@ export class Rules extends APIResource {
    * ```
    */
   list(options?: RequestOptions): APIPromise<RuleListResponse> {
-    return this._client.get('/admin/rules', { ...options, __security: { adminAuth: true } });
+    return this._client.get('/admin/rules', { ...options, __security: { adminAuth : true } });
   }
 
   /**
@@ -35,7 +35,7 @@ export class Rules extends APIResource {
    * ```
    */
   reload(options?: RequestOptions): APIPromise<RuleReloadResponse> {
-    return this._client.post('/admin/rules/reload', { ...options, __security: { adminAuth: true } });
+    return this._client.post('/admin/rules/reload', { ...options, __security: { adminAuth : true } });
   }
 
   /**
@@ -50,7 +50,7 @@ export class Rules extends APIResource {
    * ```
    */
   retrieveStats(id: string, options?: RequestOptions): APIPromise<RuleRetrieveStatsResponse> {
-    return this._client.get(path`/admin/rules/${id}/stats`, { ...options, __security: { adminAuth: true } });
+    return this._client.get(path`/admin/rules/${id}/stats`, { ...options, __security: { adminAuth : true } });
   }
 
   /**
@@ -77,7 +77,7 @@ export class Rules extends APIResource {
    * ```
    */
   test(body: RuleTestParams, options?: RequestOptions): APIPromise<RuleTestResponse> {
-    return this._client.post('/admin/rules/test', { body, ...options, __security: { adminAuth: true } });
+    return this._client.post('/admin/rules/test', { body, ...options, __security: { adminAuth : true } });
   }
 }
 
@@ -196,6 +196,6 @@ export declare namespace Rules {
     type RuleReloadResponse as RuleReloadResponse,
     type RuleRetrieveStatsResponse as RuleRetrieveStatsResponse,
     type RuleTestResponse as RuleTestResponse,
-    type RuleTestParams as RuleTestParams,
+    type RuleTestParams as RuleTestParams
   };
 }

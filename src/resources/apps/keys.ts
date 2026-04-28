@@ -22,7 +22,7 @@ export class Keys extends APIResource {
    * ```
    */
   rotate(id: string, options?: RequestOptions): APIPromise<KeyRotateResponse> {
-    return this._client.post(path`/apps/${id}/keys/rotate`, { ...options, __security: {  } });
+    return this._client.post(path`/apps/${id}/keys/rotate`, { ...options, __security: {} });
   }
 }
 
@@ -38,7 +38,5 @@ export interface KeyRotateResponse {
 }
 
 export declare namespace Keys {
-  export {
-    type KeyRotateResponse as KeyRotateResponse
-  };
+  export { type KeyRotateResponse as KeyRotateResponse };
 }

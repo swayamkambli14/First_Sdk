@@ -2,7 +2,14 @@
 
 import { APIResource } from '../../core/resource';
 import * as RulesAPI from './rules';
-import { RuleListResponse, RuleReloadResponse, RuleRetrieveStatsResponse, RuleTestParams, RuleTestResponse, Rules } from './rules';
+import {
+  RuleListResponse,
+  RuleReloadResponse,
+  RuleRetrieveStatsResponse,
+  RuleTestParams,
+  RuleTestResponse,
+  Rules,
+} from './rules';
 
 export class Admin extends APIResource {
   rules: RulesAPI.Rules = new RulesAPI.Rules(this._client);
@@ -17,6 +24,6 @@ export declare namespace Admin {
     type RuleReloadResponse as RuleReloadResponse,
     type RuleRetrieveStatsResponse as RuleRetrieveStatsResponse,
     type RuleTestResponse as RuleTestResponse,
-    type RuleTestParams as RuleTestParams
+    type RuleTestParams as RuleTestParams,
   };
 }

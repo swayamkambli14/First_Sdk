@@ -22,7 +22,7 @@ export class Events extends APIResource {
    * ```
    */
   retrieveStatus(eventID: string, options?: RequestOptions): APIPromise<EventRetrieveStatusResponse> {
-    return this._client.get(path`/events/${eventID}`, { ...options, __security: { apiKeyAuth : true } });
+    return this._client.get(path`/events/${eventID}`, { ...options, __security: { apiKeyAuth: true } });
   }
 
   /**
@@ -41,16 +41,16 @@ export class Events extends APIResource {
    * ```
    */
   track(body: EventTrackParams, options?: RequestOptions): APIPromise<EventTrackResponse> {
-    return this._client.post('/events', { body, ...options, __security: { apiKeyAuth : true } });
+    return this._client.post('/events', { body, ...options, __security: { apiKeyAuth: true } });
   }
 }
 
-export type EventStatus = 'pending' | 'processed' | 'failed'
+export type EventStatus = 'pending' | 'processed' | 'failed';
 
 /**
  * Product event categories accepted by the rules engine
  */
-export type EventType = 'purchase' | 'referral' | 'feature_usage' | 'milestone' | 'subscription'
+export type EventType = 'purchase' | 'referral' | 'feature_usage' | 'milestone' | 'subscription';
 
 export interface EventRetrieveStatusResponse {
   event_id: string;
@@ -116,6 +116,6 @@ export declare namespace Events {
     type EventType as EventType,
     type EventRetrieveStatusResponse as EventRetrieveStatusResponse,
     type EventTrackResponse as EventTrackResponse,
-    type EventTrackParams as EventTrackParams
+    type EventTrackParams as EventTrackParams,
   };
 }

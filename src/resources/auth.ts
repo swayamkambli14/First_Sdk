@@ -19,7 +19,7 @@ export class Auth extends APIResource {
    * ```
    */
   logout(options?: RequestOptions): APIPromise<AuthLogoutResponse> {
-    return this._client.post('/auth/logout', { ...options, __security: {  } });
+    return this._client.post('/auth/logout', { ...options, __security: {} });
   }
 
   /**
@@ -35,7 +35,7 @@ export class Auth extends APIResource {
    * ```
    */
   requestNonce(body: AuthRequestNonceParams, options?: RequestOptions): APIPromise<AuthRequestNonceResponse> {
-    return this._client.post('/auth/nonce', { body, ...options, __security: {  } });
+    return this._client.post('/auth/nonce', { body, ...options, __security: {} });
   }
 
   /**
@@ -47,7 +47,7 @@ export class Auth extends APIResource {
    * ```
    */
   retrieveProfile(options?: RequestOptions): APIPromise<UserProfile> {
-    return this._client.get('/auth/me', { ...options, __security: {  } });
+    return this._client.get('/auth/me', { ...options, __security: {} });
   }
 
   /**
@@ -65,12 +65,17 @@ export class Auth extends APIResource {
    * ```
    */
   verifySignature(params: AuthVerifySignatureParams, options?: RequestOptions): APIPromise<UserProfile> {
-    const { 'x-app-id': xAppID, ...body } = params
-    return this._client.post('/auth/verify', { body, ...options, headers: buildHeaders([{...(xAppID != null ? { 'x-app-id': xAppID } : undefined)}, options?.headers]), __security: {  } });
+    const { 'x-app-id': xAppID, ...body } = params;
+    return this._client.post('/auth/verify', {
+      body,
+      ...options,
+      headers: buildHeaders([{ ...(xAppID != null ? { 'x-app-id': xAppID } : undefined) }, options?.headers]),
+      __security: {},
+    });
   }
 }
 
-export type Tier = 'bronze' | 'silver' | 'gold' | 'platinum'
+export type Tier = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 export interface UserProfile {
   badge_count: number;
@@ -144,6 +149,6 @@ export declare namespace Auth {
     type AuthLogoutResponse as AuthLogoutResponse,
     type AuthRequestNonceResponse as AuthRequestNonceResponse,
     type AuthRequestNonceParams as AuthRequestNonceParams,
-    type AuthVerifySignatureParams as AuthVerifySignatureParams
+    type AuthVerifySignatureParams as AuthVerifySignatureParams,
   };
 }

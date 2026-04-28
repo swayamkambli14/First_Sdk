@@ -22,7 +22,7 @@ export class Referrals extends APIResource {
    * ```
    */
   retrieveChain(wallet: string, options?: RequestOptions): APIPromise<ReferralRetrieveChainResponse> {
-    return this._client.get(path`/referrals/${wallet}/chain`, { ...options, __security: {  } });
+    return this._client.get(path`/referrals/${wallet}/chain`, { ...options, __security: {} });
   }
 
   /**
@@ -37,7 +37,7 @@ export class Referrals extends APIResource {
    * ```
    */
   retrieveStats(wallet: string, options?: RequestOptions): APIPromise<ReferralRetrieveStatsResponse> {
-    return this._client.get(path`/referrals/${wallet}`, { ...options, __security: {  } });
+    return this._client.get(path`/referrals/${wallet}`, { ...options, __security: {} });
   }
 
   /**
@@ -52,7 +52,7 @@ export class Referrals extends APIResource {
    * ```
    */
   validateCode(code: string, options?: RequestOptions): APIPromise<ReferralValidateCodeResponse> {
-    return this._client.post(path`/referrals/validate/${code}`, { ...options, __security: {  } });
+    return this._client.post(path`/referrals/validate/${code}`, { ...options, __security: {} });
   }
 }
 
@@ -69,7 +69,7 @@ export interface ReferralEntry {
   confirmed_at?: string | null;
 }
 
-export type ReferralStatus = 'pending' | 'confirmed' | 'fraud'
+export type ReferralStatus = 'pending' | 'confirmed' | 'fraud';
 
 export interface ReferralRetrieveChainResponse {
   referred_by: ReferralRetrieveChainResponse.ReferredBy | null;
@@ -118,6 +118,6 @@ export declare namespace Referrals {
     type ReferralStatus as ReferralStatus,
     type ReferralRetrieveChainResponse as ReferralRetrieveChainResponse,
     type ReferralRetrieveStatsResponse as ReferralRetrieveStatsResponse,
-    type ReferralValidateCodeResponse as ReferralValidateCodeResponse
+    type ReferralValidateCodeResponse as ReferralValidateCodeResponse,
   };
 }

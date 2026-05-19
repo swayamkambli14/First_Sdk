@@ -1,6 +1,6 @@
 {
   "name": "async",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "The official TypeScript library for the Async API",
   "author": "Async <>",
   "types": "dist/index.d.ts",
